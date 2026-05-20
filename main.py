@@ -64,6 +64,213 @@ SOFTWARE_INSTALLERS = {
 }
 
 
+TRANSLATIONS = {
+    "cz": {
+        "lang_label": "🇨🇿 CZ",
+        "window_title": "HelloComp Start",
+        "header_title": "Můj počítač HelloComp",
+        "header_subtitle": "První spuštění, podpora, servis a doporučený software",
+        "footer": "HelloComp.cz © 2026  |  verze 1.0",
+
+        "menu": [
+            "První kroky",
+            "Potřebuji podporu",
+            "Volitelný software",
+            "Potřebuji servis",
+            "Staňte se fanouškem",
+        ],
+
+        "first_steps_title": "První kroky s novým počítačem",
+        "first_steps_text": "Pro váš nový počítač jsme připravili základní návody a doporučení.",
+        "first_steps_tiles": [
+            ("Návod k použití počítače", "Základní informace po prvním spuštění"),
+            ("Aktivace Windows", "Jak ověřit aktivaci systému Windows"),
+            ("Doporučené nastavení", "Tipy pro stabilní a plynulý provoz"),
+        ],
+
+        "support_title": "Potřebuji podporu",
+        "support_text": "Jsme tu pro vás, pokud potřebujete poradit s počítačem, objednávkou nebo nastavením.",
+        "support_tiles": [
+            ("Kontaktovat podporu", "Otevřít kontaktní stránku HelloComp"),
+            ("Napsat e-mail", "Rychlý kontakt na podporu"),
+            ("Časté otázky", "Odpovědi na běžné dotazy"),
+        ],
+
+        "software_title": "Volitelný software",
+        "software_text": "Vyberte si software, který se vám může hodit pro hraní, práci i správu počítače.",
+        "software_tiles": [
+            ("Instalovat Steam", "Stáhnout a spustit oficiální instalátor"),
+            ("Instalovat Discord", "Stáhnout a spustit oficiální instalátor"),
+            ("NVIDIA App", "Ovladače a nástroje pro nVidia grafiky"),
+            ("AMD Adrenalin", "Ovladače a nástroje pro AMD grafiky"),
+            ("Epic Games Launcher", "Otevřít oficiální stránku pro stažení"),
+        ],
+
+        "service_title": "Servis a reklamace",
+        "service_text": "Potřebujete servis, údržbu nebo řešit reklamaci? Tady najdete potřebné odkazy.",
+        "service_tiles": [
+            ("Reklamace", "Informace k reklamaci zboží"),
+            ("Servis počítače", "Pomoc s opravou nebo údržbou"),
+            ("Bezpečné odeslání PC", "Jak správně zabalit počítač"),
+        ],
+
+        "fans_title": "Staňte se fanouškem HelloComp",
+        "fans_text": "Sledujte nás, přidejte se do komunity nebo nám zanechte hodnocení.",
+        "fans_tiles": [
+            ("Discord", "Připojit se ke komunitě"),
+            ("Instagram", "Sledovat novinky a sestavy"),
+            ("Facebook", "Sledovat HelloComp"),
+            ("Hodnocení", "Pomozte nám zpětnou vazbou"),
+        ],
+
+        "install_only_windows": "Přímá instalace je dostupná ve Windows.\n\nNa tomto systému otevřu stránku pro stažení: {name}.",
+        "installer_missing": "Instalátor nebyl nalezen.",
+        "install_title": "Instalovat {name}",
+        "install_question": "Aplikace stáhne oficiální instalátor {name} a spustí ho.\n\nPokračovat?",
+        "download_title": "Stahuji {name}",
+        "download_text": "Instalátor {name} se začne stahovat.\nPo dokončení se automaticky spustí.",
+        "install_error_title": "Instalace {name}",
+        "install_error_text": "Instalátor se nepodařilo stáhnout nebo spustit.\n\nOtevřu oficiální stránku pro stažení.\n\nChyba:\n{error}",
+    },
+
+    "sk": {
+        "lang_label": "🇸🇰 SK",
+        "window_title": "HelloComp Start",
+        "header_title": "Môj počítač HelloComp",
+        "header_subtitle": "Prvé spustenie, podpora, servis a odporúčaný softvér",
+        "footer": "HelloComp.cz © 2026  |  verzia 1.0",
+
+        "menu": [
+            "Prvé kroky",
+            "Potrebujem podporu",
+            "Voliteľný softvér",
+            "Potrebujem servis",
+            "Staňte sa fanúšikom",
+        ],
+
+        "first_steps_title": "Prvé kroky s novým počítačom",
+        "first_steps_text": "Pre váš nový počítač sme pripravili základné návody a odporúčania.",
+        "first_steps_tiles": [
+            ("Návod na používanie počítača", "Základné informácie po prvom spustení"),
+            ("Aktivácia Windows", "Ako overiť aktiváciu systému Windows"),
+            ("Odporúčané nastavenia", "Tipy pre stabilnú a plynulú prevádzku"),
+        ],
+
+        "support_title": "Potrebujem podporu",
+        "support_text": "Sme tu pre vás, ak potrebujete poradiť s počítačom, objednávkou alebo nastavením.",
+        "support_tiles": [
+            ("Kontaktovať podporu", "Otvoriť kontaktnú stránku HelloComp"),
+            ("Napísať e-mail", "Rýchly kontakt na podporu"),
+            ("Časté otázky", "Odpovede na bežné otázky"),
+        ],
+
+        "software_title": "Voliteľný softvér",
+        "software_text": "Vyberte si softvér, ktorý sa vám môže hodiť na hranie, prácu aj správu počítača.",
+        "software_tiles": [
+            ("Inštalovať Steam", "Stiahnuť a spustiť oficiálny inštalátor"),
+            ("Inštalovať Discord", "Stiahnuť a spustiť oficiálny inštalátor"),
+            ("NVIDIA App", "Ovládače a nástroje pre nVidia grafiky"),
+            ("AMD Adrenalin", "Ovládače a nástroje pre AMD grafiky"),
+            ("Epic Games Launcher", "Otvoriť oficiálnu stránku na stiahnutie"),
+        ],
+
+        "service_title": "Servis a reklamácie",
+        "service_text": "Potrebujete servis, údržbu alebo riešiť reklamáciu? Tu nájdete potrebné odkazy.",
+        "service_tiles": [
+            ("Reklamácie", "Informácie k reklamácii tovaru"),
+            ("Servis počítača", "Pomoc s opravou alebo údržbou"),
+            ("Bezpečné odoslanie PC", "Ako správne zabaliť počítač"),
+        ],
+
+        "fans_title": "Staňte sa fanúšikom HelloComp",
+        "fans_text": "Sledujte nás, pridajte sa do komunity alebo nám zanechajte hodnotenie.",
+        "fans_tiles": [
+            ("Discord", "Pripojiť sa ku komunite"),
+            ("Instagram", "Sledovať novinky a zostavy"),
+            ("Facebook", "Sledovať HelloComp"),
+            ("Hodnotenie", "Pomôžte nám spätnou väzbou"),
+        ],
+
+        "install_only_windows": "Priama inštalácia je dostupná vo Windows.\n\nNa tomto systéme otvorím stránku na stiahnutie: {name}.",
+        "installer_missing": "Inštalátor nebol nájdený.",
+        "install_title": "Inštalovať {name}",
+        "install_question": "Aplikácia stiahne oficiálny inštalátor {name} a spustí ho.\n\nPokračovať?",
+        "download_title": "Sťahujem {name}",
+        "download_text": "Inštalátor {name} sa začne sťahovať.\nPo dokončení sa automaticky spustí.",
+        "install_error_title": "Inštalácia {name}",
+        "install_error_text": "Inštalátor sa nepodarilo stiahnuť alebo spustiť.\n\nOtvorím oficiálnu stránku na stiahnutie.\n\nChyba:\n{error}",
+    },
+
+    "hu": {
+        "lang_label": "🇭🇺 HU",
+        "window_title": "HelloComp Start",
+        "header_title": "Saját HelloComp számítógépem",
+        "header_subtitle": "Első indítás, támogatás, szerviz és ajánlott szoftverek",
+        "footer": "HelloComp.cz © 2026  |  verzió 1.0",
+
+        "menu": [
+            "Első lépések",
+            "Támogatásra van szükségem",
+            "Választható szoftverek",
+            "Szervizre van szükségem",
+            "Legyen rajongónk",
+        ],
+
+        "first_steps_title": "Első lépések az új számítógéppel",
+        "first_steps_text": "Az új számítógépéhez alapvető útmutatókat és ajánlásokat készítettünk.",
+        "first_steps_tiles": [
+            ("Számítógép használati útmutató", "Alapvető információk az első indítás után"),
+            ("Windows aktiválása", "A Windows aktiválásának ellenőrzése"),
+            ("Ajánlott beállítások", "Tippek a stabil és gördülékeny működéshez"),
+        ],
+
+        "support_title": "Támogatásra van szükségem",
+        "support_text": "Segítünk, ha tanácsra van szüksége a számítógéppel, a rendeléssel vagy a beállításokkal kapcsolatban.",
+        "support_tiles": [
+            ("Támogatás felkeresése", "A HelloComp kapcsolat oldalának megnyitása"),
+            ("E-mail írása", "Gyors kapcsolat a támogatással"),
+            ("Gyakori kérdések", "Válaszok a gyakori kérdésekre"),
+        ],
+
+        "software_title": "Választható szoftverek",
+        "software_text": "Válassza ki azokat a szoftvereket, amelyek hasznosak lehetnek játékhoz, munkához és a számítógép kezeléséhez.",
+        "software_tiles": [
+            ("Steam telepítése", "Hivatalos telepítő letöltése és indítása"),
+            ("Discord telepítése", "Hivatalos telepítő letöltése és indítása"),
+            ("NVIDIA App", "Illesztőprogramok és eszközök nVidia grafikus kártyákhoz"),
+            ("AMD Adrenalin", "Illesztőprogramok és eszközök AMD grafikus kártyákhoz"),
+            ("Epic Games Launcher", "A hivatalos letöltési oldal megnyitása"),
+        ],
+
+        "service_title": "Szerviz és reklamáció",
+        "service_text": "Szervizre, karbantartásra vagy reklamációra van szüksége? Itt megtalálja a szükséges hivatkozásokat.",
+        "service_tiles": [
+            ("Reklamáció", "Információk a termék reklamációjához"),
+            ("Számítógép szerviz", "Segítség javításhoz vagy karbantartáshoz"),
+            ("PC biztonságos küldése", "Hogyan csomagolja be helyesen a számítógépet"),
+        ],
+
+        "fans_title": "Legyen a HelloComp rajongója",
+        "fans_text": "Kövessen minket, csatlakozzon a közösséghez, vagy hagyjon értékelést.",
+        "fans_tiles": [
+            ("Discord", "Csatlakozás a közösséghez"),
+            ("Instagram", "Újdonságok és gépösszeállítások követése"),
+            ("Facebook", "HelloComp követése"),
+            ("Értékelés", "Segítsen nekünk visszajelzéssel"),
+        ],
+
+        "install_only_windows": "A közvetlen telepítés Windows alatt érhető el.\n\nEzen a rendszeren megnyitom a letöltési oldalt: {name}.",
+        "installer_missing": "A telepítő nem található.",
+        "install_title": "{name} telepítése",
+        "install_question": "Az alkalmazás letölti és elindítja a(z) {name} hivatalos telepítőjét.\n\nFolytatja?",
+        "download_title": "{name} letöltése",
+        "download_text": "A(z) {name} telepítője letöltésre kerül.\nA letöltés után automatikusan elindul.",
+        "install_error_title": "{name} telepítése",
+        "install_error_text": "A telepítőt nem sikerült letölteni vagy elindítani.\n\nMegnyitom a hivatalos letöltési oldalt.\n\nHiba:\n{error}",
+    },
+}
+
+
 def find_first_existing(paths):
     for path in paths:
         if path.exists():
@@ -110,11 +317,17 @@ def is_windows():
     return platform.system().lower() == "windows"
 
 
-def download_and_run_installer(parent, installer_key):
+def open_url(url):
+    if url:
+        webbrowser.open(url)
+
+
+def download_and_run_installer(parent, installer_key, language):
+    t = TRANSLATIONS[language]
     installer = SOFTWARE_INSTALLERS.get(installer_key)
 
     if not installer:
-        QMessageBox.warning(parent, "Instalace", "Instalátor nebyl nalezen.")
+        QMessageBox.warning(parent, "Instalace", t["installer_missing"])
         return
 
     name = installer["name"]
@@ -122,16 +335,16 @@ def download_and_run_installer(parent, installer_key):
     if not is_windows():
         QMessageBox.information(
             parent,
-            "Instalace",
-            f"Přímá instalace je dostupná ve Windows.\n\nNa tomto systému otevřu stránku pro stažení: {name}."
+            t["install_title"].format(name=name),
+            t["install_only_windows"].format(name=name)
         )
         webbrowser.open(installer["fallback_url"])
         return
 
     reply = QMessageBox.question(
         parent,
-        f"Instalovat {name}",
-        f"Aplikace stáhne oficiální instalátor {name} a spustí ho.\n\nPokračovat?",
+        t["install_title"].format(name=name),
+        t["install_question"].format(name=name),
         QMessageBox.Yes | QMessageBox.No,
         QMessageBox.Yes
     )
@@ -154,8 +367,8 @@ def download_and_run_installer(parent, installer_key):
 
         QMessageBox.information(
             parent,
-            f"Stahuji {name}",
-            f"Instalátor {name} se začne stahovat.\nPo dokončení se automaticky spustí."
+            t["download_title"].format(name=name),
+            t["download_text"].format(name=name)
         )
 
         with urllib.request.urlopen(request, timeout=60) as response:
@@ -171,8 +384,8 @@ def download_and_run_installer(parent, installer_key):
     except Exception as error:
         QMessageBox.warning(
             parent,
-            f"Instalace {name}",
-            f"Instalátor se nepodařilo stáhnout nebo spustit.\n\nOtevřu oficiální stránku pro stažení.\n\nChyba:\n{error}"
+            t["install_error_title"].format(name=name),
+            t["install_error_text"].format(name=name, error=error)
         )
         webbrowser.open(installer["fallback_url"])
 
@@ -220,47 +433,68 @@ class SvgLogo(QLabel):
 
 
 class MenuButton(QPushButton):
-    def __init__(self, text):
-        super().__init__(text)
+    def __init__(self):
+        super().__init__()
         self.setCursor(Qt.PointingHandCursor)
         self.setFixedHeight(64)
         self.setCheckable(True)
 
 
+class LangButton(QPushButton):
+    def __init__(self, text, language):
+        super().__init__(text)
+        self.language = language
+        self.setCursor(Qt.PointingHandCursor)
+        self.setCheckable(True)
+        self.setFixedHeight(30)
+        self.setMinimumWidth(62)
+
+
 class TileButton(QPushButton):
-    def __init__(self, title, subtitle, url=None, installer_key=None):
+    def __init__(self, title, subtitle, url=None, installer_key=None, language="cz"):
         super().__init__()
         self.url = url
         self.installer_key = installer_key
+        self.language = language
         self.setCursor(Qt.PointingHandCursor)
         self.setMinimumHeight(128)
-        self.setText(f"{title}\n{subtitle}")
+        self.update_text(title, subtitle)
         self.clicked.connect(self.handle_click)
+
+    def update_text(self, title, subtitle):
+        self.setText(f"{title}\n{subtitle}")
+
+    def set_language(self, language):
+        self.language = language
 
     def handle_click(self):
         if self.installer_key:
-            download_and_run_installer(self.window(), self.installer_key)
+            download_and_run_installer(self.window(), self.installer_key, self.language)
             return
 
         if self.url:
-            webbrowser.open(self.url)
+            open_url(self.url)
 
 
 class HelloCompStart(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.language = "cz"
         self.app_font = load_app_font()
         self.logo_path = find_logo()
 
-        self.setWindowTitle("HelloComp Start")
+        self.setWindowTitle(TRANSLATIONS[self.language]["window_title"])
         self.resize(1180, 720)
         self.setMinimumSize(980, 620)
 
-        if APP_ICON.exists():
+        if is_windows() and APP_ICON.exists():
             self.setWindowIcon(QIcon(str(APP_ICON)))
 
         self.menu_buttons = []
+        self.lang_buttons = []
+        self.page_labels = {}
+        self.tile_groups = {}
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -276,18 +510,19 @@ class HelloCompStart(QWidget):
         self.pages.addWidget(self.create_service_page())
         self.pages.addWidget(self.create_fans_page())
 
-        footer = QLabel("HelloComp.cz © 2026  |  verze 1.0")
-        footer.setObjectName("Footer")
-        footer.setAlignment(Qt.AlignCenter)
-        footer.setFixedHeight(42)
+        self.footer = QLabel()
+        self.footer.setObjectName("Footer")
+        self.footer.setAlignment(Qt.AlignCenter)
+        self.footer.setFixedHeight(42)
 
         root.addWidget(header)
         root.addWidget(menu)
         root.addWidget(self.pages)
-        root.addWidget(footer)
+        root.addWidget(self.footer)
 
         self.set_active_menu(0)
         self.apply_styles()
+        self.update_language("cz")
 
     def create_header(self):
         header = QFrame()
@@ -305,27 +540,48 @@ class HelloCompStart(QWidget):
         left_wrapper.setContentsMargins(0, 0, 0, 0)
         left_wrapper.setSpacing(8)
 
-        title = QLabel("Můj počítač HelloComp")
-        title.setObjectName("HeaderTitle")
+        self.header_title = QLabel()
+        self.header_title.setObjectName("HeaderTitle")
 
-        subtitle = QLabel("První spuštění, podpora, servis a doporučený software")
-        subtitle.setObjectName("HeaderSubtitle")
+        self.header_subtitle = QLabel()
+        self.header_subtitle.setObjectName("HeaderSubtitle")
 
         left_wrapper.addStretch()
-        left_wrapper.addWidget(title)
-        left_wrapper.addWidget(subtitle)
+        left_wrapper.addWidget(self.header_title)
+        left_wrapper.addWidget(self.header_subtitle)
         left_wrapper.addStretch()
+
+        right_wrapper = QWidget()
+        right_wrapper.setObjectName("HeaderRightWrapper")
+
+        right_layout = QVBoxLayout(right_wrapper)
+        right_layout.setContentsMargins(0, 10, 0, 10)
+        right_layout.setSpacing(8)
+
+        lang_row = QWidget()
+        lang_row.setObjectName("LangRow")
+
+        lang_layout = QHBoxLayout(lang_row)
+        lang_layout.setContentsMargins(0, 0, 0, 0)
+        lang_layout.setSpacing(6)
+        lang_layout.addStretch()
+
+        for language in ["cz", "sk", "hu"]:
+            btn = LangButton(TRANSLATIONS[language]["lang_label"], language)
+            btn.clicked.connect(lambda checked=False, lang=language: self.update_language(lang))
+            self.lang_buttons.append(btn)
+            lang_layout.addWidget(btn)
 
         logo_wrapper = QFrame()
         logo_wrapper.setObjectName("LogoWrapper")
-        logo_wrapper.setFixedSize(330, 88)
+        logo_wrapper.setFixedSize(330, 74)
 
         logo_layout = QVBoxLayout(logo_wrapper)
         logo_layout.setContentsMargins(0, 0, 0, 0)
         logo_layout.setSpacing(0)
 
         if self.logo_path and self.logo_path.suffix.lower() == ".svg":
-            logo = SvgLogo(self.logo_path, width=300, height=78)
+            logo = SvgLogo(self.logo_path, width=300, height=68)
             logo_layout.addWidget(logo, alignment=Qt.AlignCenter)
 
         elif self.logo_path and self.logo_path.suffix.lower() in [".png", ".jpg", ".jpeg", ".webp"]:
@@ -336,7 +592,7 @@ class HelloCompStart(QWidget):
             logo.setPixmap(
                 pixmap.scaled(
                     300,
-                    78,
+                    68,
                     Qt.KeepAspectRatio,
                     Qt.SmoothTransformation
                 )
@@ -349,12 +605,14 @@ class HelloCompStart(QWidget):
             logo = QLabel("HELLOCOMP")
             logo.setObjectName("LogoFallback")
             logo.setAlignment(Qt.AlignCenter)
-
             logo_layout.addWidget(logo)
+
+        right_layout.addWidget(lang_row)
+        right_layout.addWidget(logo_wrapper)
 
         layout.addWidget(left_wrapper_widget)
         layout.addStretch()
-        layout.addWidget(logo_wrapper)
+        layout.addWidget(right_wrapper)
 
         return header
 
@@ -367,16 +625,8 @@ class HelloCompStart(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        items = [
-            "První kroky",
-            "Potřebuji podporu",
-            "Volitelný software",
-            "Potřebuji servis",
-            "Staňte se fanouškem",
-        ]
-
-        for index, text in enumerate(items):
-            btn = MenuButton(text)
+        for index in range(5):
+            btn = MenuButton()
             btn.clicked.connect(lambda checked=False, i=index: self.set_active_menu(i))
             self.menu_buttons.append(btn)
             layout.addWidget(btn)
@@ -390,184 +640,64 @@ class HelloCompStart(QWidget):
             btn.setChecked(i == index)
 
     def create_first_steps_page(self):
-        page = self.create_page_base(
-            "První kroky s novým počítačem",
-            "Pro váš nový počítač jsme připravili základní návody a doporučení."
-        )
-
-        tiles = self.create_tiles_row([
-            (
-                "Návod k použití počítače",
-                "Základní informace po prvním spuštění",
-                "https://www.hellocomp.cz/",
-                None
-            ),
-            (
-                "Aktivace Windows",
-                "Jak ověřit aktivaci systému Windows",
-                "https://www.hellocomp.cz/",
-                None
-            ),
-            (
-                "Doporučené nastavení",
-                "Tipy pro stabilní a plynulý provoz",
-                "https://www.hellocomp.cz/",
-                None
-            ),
+        page = self.create_page_base("first_steps")
+        tiles = self.create_tiles_row("first_steps", [
+            ("https://www.hellocomp.cz/", None),
+            ("https://www.hellocomp.cz/", None),
+            ("https://www.hellocomp.cz/", None),
         ])
-
         page.layout().addWidget(tiles)
         page.layout().addStretch()
-
         return page
 
     def create_support_page(self):
-        page = self.create_page_base(
-            "Potřebuji podporu",
-            "Jsme tu pro vás, pokud potřebujete poradit s počítačem, objednávkou nebo nastavením."
-        )
-
-        tiles = self.create_tiles_row([
-            (
-                "Kontaktovat podporu",
-                "Otevřít kontaktní stránku HelloComp",
-                "https://www.hellocomp.cz/kontakty/",
-                None
-            ),
-            (
-                "Napsat e-mail",
-                "Rychlý kontakt na podporu",
-                "mailto:info@hellocomp.cz",
-                None
-            ),
-            (
-                "Časté otázky",
-                "Odpovědi na běžné dotazy",
-                "https://www.hellocomp.cz/",
-                None
-            ),
+        page = self.create_page_base("support")
+        tiles = self.create_tiles_row("support", [
+            ("https://www.hellocomp.cz/kontakty/", None),
+            ("mailto:info@hellocomp.cz", None),
+            ("https://www.hellocomp.cz/", None),
         ])
-
         page.layout().addWidget(tiles)
         page.layout().addStretch()
-
         return page
 
     def create_software_page(self):
-        page = self.create_page_base(
-            "Volitelný software",
-            "Vyberte si software, který se vám může hodit pro hraní, práci i správu počítače."
-        )
-
-        tiles = self.create_tiles_row([
-            (
-                "Instalovat Steam",
-                "Stáhnout a spustit oficiální instalátor",
-                None,
-                "steam"
-            ),
-            (
-                "Instalovat Discord",
-                "Stáhnout a spustit oficiální instalátor",
-                None,
-                "discord"
-            ),
-            (
-                "NVIDIA App",
-                "Ovladače a nástroje pro nVidia grafiky",
-                "https://www.nvidia.com/",
-                None
-            ),
-            (
-                "AMD Adrenalin",
-                "Ovladače a nástroje pro AMD grafiky",
-                "https://www.amd.com/",
-                None
-            ),
-            (
-                "Epic Games Launcher",
-                "Otevřít oficiální stránku pro stažení",
-                "https://store.epicgames.com/download",
-                None
-            ),
+        page = self.create_page_base("software")
+        tiles = self.create_tiles_row("software", [
+            (None, "steam"),
+            (None, "discord"),
+            ("https://www.nvidia.com/", None),
+            ("https://www.amd.com/", None),
+            ("https://store.epicgames.com/download", None),
         ])
-
         page.layout().addWidget(tiles)
         page.layout().addStretch()
-
         return page
 
     def create_service_page(self):
-        page = self.create_page_base(
-            "Servis a reklamace",
-            "Potřebujete servis, údržbu nebo řešit reklamaci? Tady najdete potřebné odkazy."
-        )
-
-        tiles = self.create_tiles_row([
-            (
-                "Reklamace",
-                "Informace k reklamaci zboží",
-                "https://www.hellocomp.cz/",
-                None
-            ),
-            (
-                "Servis počítače",
-                "Pomoc s opravou nebo údržbou",
-                "https://www.hellocomp.cz/",
-                None
-            ),
-            (
-                "Bezpečné odeslání PC",
-                "Jak správně zabalit počítač",
-                "https://www.hellocomp.cz/",
-                None
-            ),
+        page = self.create_page_base("service")
+        tiles = self.create_tiles_row("service", [
+            ("https://www.hellocomp.cz/", None),
+            ("https://www.hellocomp.cz/", None),
+            ("https://www.hellocomp.cz/", None),
         ])
-
         page.layout().addWidget(tiles)
         page.layout().addStretch()
-
         return page
 
     def create_fans_page(self):
-        page = self.create_page_base(
-            "Staňte se fanouškem HelloComp",
-            "Sledujte nás, přidejte se do komunity nebo nám zanechte hodnocení."
-        )
-
-        tiles = self.create_tiles_row([
-            (
-                "Discord",
-                "Připojit se ke komunitě",
-                "https://discord.com/",
-                None
-            ),
-            (
-                "Instagram",
-                "Sledovat novinky a sestavy",
-                "https://www.instagram.com/",
-                None
-            ),
-            (
-                "Facebook",
-                "Sledovat HelloComp",
-                "https://www.facebook.com/",
-                None
-            ),
-            (
-                "Hodnocení",
-                "Pomozte nám zpětnou vazbou",
-                "https://www.hellocomp.cz/",
-                None
-            ),
+        page = self.create_page_base("fans")
+        tiles = self.create_tiles_row("fans", [
+            ("https://discord.com/invite/dQDDXyek9x", None),
+            ("https://www.instagram.com/hellocompcz", None),
+            ("https://www.facebook.com/HelloComp.cz", None),
+            ("https://www.hellocomp.cz/", None),
         ])
-
         page.layout().addWidget(tiles)
         page.layout().addStretch()
-
         return page
 
-    def create_page_base(self, title, text):
+    def create_page_base(self, key):
         page = QWidget()
         page.setObjectName("Page")
 
@@ -575,19 +705,24 @@ class HelloCompStart(QWidget):
         layout.setContentsMargins(50, 50, 50, 30)
         layout.setSpacing(26)
 
-        title_label = QLabel(title)
+        title_label = QLabel()
         title_label.setObjectName("PageTitle")
 
-        text_label = QLabel(text)
+        text_label = QLabel()
         text_label.setObjectName("PageText")
         text_label.setWordWrap(True)
 
         layout.addWidget(title_label)
         layout.addWidget(text_label)
 
+        self.page_labels[key] = {
+            "title": title_label,
+            "text": text_label,
+        }
+
         return page
 
-    def create_tiles_row(self, items):
+    def create_tiles_row(self, key, actions):
         wrapper = QWidget()
         wrapper.setObjectName("TilesWrapper")
 
@@ -595,11 +730,42 @@ class HelloCompStart(QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.setSpacing(22)
 
-        for title, subtitle, url, installer_key in items:
-            tile = TileButton(title, subtitle, url, installer_key)
+        self.tile_groups[key] = []
+
+        for url, installer_key in actions:
+            tile = TileButton("", "", url, installer_key, self.language)
+            self.tile_groups[key].append(tile)
             layout.addWidget(tile)
 
         return wrapper
+
+    def update_language(self, language):
+        self.language = language
+        t = TRANSLATIONS[language]
+
+        self.setWindowTitle(t["window_title"])
+        self.header_title.setText(t["header_title"])
+        self.header_subtitle.setText(t["header_subtitle"])
+        self.footer.setText(t["footer"])
+
+        for index, text in enumerate(t["menu"]):
+            self.menu_buttons[index].setText(text)
+
+        for btn in self.lang_buttons:
+            btn.setChecked(btn.language == language)
+
+        page_keys = ["first_steps", "support", "software", "service", "fans"]
+
+        for key in page_keys:
+            self.page_labels[key]["title"].setText(t[f"{key}_title"])
+            self.page_labels[key]["text"].setText(t[f"{key}_text"])
+
+            tiles_texts = t[f"{key}_tiles"]
+            tiles = self.tile_groups[key]
+
+            for tile, (title, subtitle) in zip(tiles, tiles_texts):
+                tile.update_text(title, subtitle)
+                tile.set_language(language)
 
     def apply_styles(self):
         self.setStyleSheet(f"""
@@ -620,7 +786,9 @@ class HelloCompStart(QWidget):
                 border-bottom: 1px solid rgba(255,255,255,0.08);
             }}
 
-            #HeaderTextWrapper {{
+            #HeaderTextWrapper,
+            #HeaderRightWrapper,
+            #LangRow {{
                 background: transparent;
             }}
 
@@ -692,12 +860,24 @@ class HelloCompStart(QWidget):
                 border-bottom: 3px solid #ffffff;
             }}
 
-            MenuButton:checked:hover {{
-                background: qlineargradient(
-                    x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #18243C,
-                    stop:1 #284C87
-                );
+            LangButton {{
+                background: rgba(255,255,255,0.075);
+                border: 1px solid rgba(255,255,255,0.13);
+                border-radius: 8px;
+                color: rgba(255,255,255,0.74);
+                font-size: 12px;
+                font-weight: 400;
+            }}
+
+            LangButton:hover {{
+                background: rgba(255,255,255,0.13);
+                color: #ffffff;
+            }}
+
+            LangButton:checked {{
+                background: rgba(255,255,255,0.20);
+                border: 1px solid rgba(255,255,255,0.36);
+                color: #ffffff;
             }}
 
             #Page {{
@@ -758,7 +938,7 @@ class HelloCompStart(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    if APP_ICON.exists():
+    if is_windows() and APP_ICON.exists():
         app.setWindowIcon(QIcon(str(APP_ICON)))
 
     window = HelloCompStart()
