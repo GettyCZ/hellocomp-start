@@ -33,7 +33,10 @@ from PySide6.QtWidgets import (
 )
 
 
-APP_VERSION = "1.7"
+APP_VERSION = "1.10"
+
+APP_WIDTH = 1180
+APP_HEIGHT = 760
 
 APP_DIR = Path(__file__).resolve().parent
 BASE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
@@ -66,12 +69,14 @@ SOFTWARE_INSTALLERS = {
         "url": "https://cdn.cloudflare.steamstatic.com/client/installer/SteamSetup.exe",
         "filename": "SteamSetup.exe",
         "fallback_url": "https://store.steampowered.com/about/",
+        "exe_names": ["steam.exe"],
     },
     "discord": {
         "name": "Discord",
         "url": "https://discord.com/api/download?platform=win",
         "filename": "DiscordSetup.exe",
         "fallback_url": "https://discord.com/download",
+        "exe_names": ["Discord.exe", "Update.exe"],
     },
 }
 
@@ -144,10 +149,13 @@ TRANSLATIONS = {
 
         "install_only_windows": "Přímá instalace je dostupná ve Windows.\n\nNa tomto systému otevřu stránku pro stažení: {name}.",
         "installer_missing": "Instalátor nebyl nalezen.",
+        "already_installed_title": "{name} je již nainstalovaný",
+        "already_installed_text": "Aplikace {name} je už v počítači nainstalovaná.\n\nUmístění:\n{path}",
+        "already_installed_no_path": "Aplikace {name} je už v počítači nainstalovaná.",
         "install_title": "Instalovat {name}",
         "install_question": "Aplikace stáhne oficiální instalátor {name} a spustí ho.\n\nPokračovat?",
         "download_title": "Stahuji {name}",
-        "download_text": "Instalátor {name} se začne stahovat.\nPo dokončení se automaticky spustí.",
+        "download_text": "Instalátor {name} se stahuje.\nPo dokončení se automaticky spustí.",
         "install_error_title": "Instalace {name}",
         "install_error_text": "Instalátor se nepodařilo stáhnout nebo spustit.\n\nOtevřu oficiální stránku pro stažení.\n\nChyba:\n{error}",
     },
@@ -219,10 +227,13 @@ TRANSLATIONS = {
 
         "install_only_windows": "Priama inštalácia je dostupná vo Windows.\n\nNa tomto systéme otvorím stránku na stiahnutie: {name}.",
         "installer_missing": "Inštalátor nebol nájdený.",
+        "already_installed_title": "{name} je už nainštalovaný",
+        "already_installed_text": "Aplikácia {name} je už v počítači nainštalovaná.\n\nUmiestnenie:\n{path}",
+        "already_installed_no_path": "Aplikácia {name} je už v počítači nainštalovaná.",
         "install_title": "Inštalovať {name}",
         "install_question": "Aplikácia stiahne oficiálny inštalátor {name} a spustí ho.\n\nPokračovať?",
         "download_title": "Sťahujem {name}",
-        "download_text": "Inštalátor {name} sa začne sťahovať.\nPo dokončení sa automaticky spustí.",
+        "download_text": "Inštalátor {name} sa sťahuje.\nPo dokončení sa automaticky spustí.",
         "install_error_title": "Inštalácia {name}",
         "install_error_text": "Inštalátor sa nepodarilo stiahnuť alebo spustiť.\n\nOtvorím oficiálnu stránku na stiahnutie.\n\nChyba:\n{error}",
     },
@@ -294,10 +305,13 @@ TRANSLATIONS = {
 
         "install_only_windows": "A közvetlen telepítés Windows alatt érhető el.\n\nEzen a rendszeren megnyitom a letöltési oldalt: {name}.",
         "installer_missing": "A telepítő nem található.",
+        "already_installed_title": "A(z) {name} már telepítve van",
+        "already_installed_text": "A(z) {name} alkalmazás már telepítve van a számítógépen.\n\nHely:\n{path}",
+        "already_installed_no_path": "A(z) {name} alkalmazás már telepítve van a számítógépen.",
         "install_title": "{name} telepítése",
         "install_question": "Az alkalmazás letölti és elindítja a(z) {name} hivatalos telepítőjét.\n\nFolytatja?",
         "download_title": "{name} letöltése",
-        "download_text": "A(z) {name} telepítője letöltésre kerül.\nA letöltés után automatikusan elindul.",
+        "download_text": "A(z) {name} telepítője letöltődik.\nA letöltés után automatikusan elindul.",
         "install_error_title": "{name} telepítése",
         "install_error_text": "A telepítőt nem sikerült letölteni vagy elindítani.\n\nMegnyitom a hivatalos letöltési oldalt.\n\nHiba:\n{error}",
     },
@@ -400,6 +414,134 @@ def format_gb(bytes_value):
         return ""
 
 
+def path_exists(path):
+    try:
+        return path and Path(path).exists()
+    except Exception:
+        return False
+
+
+def find_steam_installation():
+    if not is_windows():
+        return None
+
+    candidates = []
+
+    program_files_x86 = os.environ.get("ProgramFiles(x86)")
+    program_files = os.environ.get("ProgramFiles")
+    local_app_data = os.environ.get("LOCALAPPDATA")
+
+    if program_files_x86:
+        candidates.append(Path(program_files_x86) / "Steam" / "steam.exe")
+
+    if program_files:
+        candidates.append(Path(program_files) / "Steam" / "steam.exe")
+
+    if local_app_data:
+        candidates.append(Path(local_app_data) / "Steam" / "steam.exe")
+
+    try:
+        import winreg
+
+        registry_locations = [
+            (winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam", "SteamExe"),
+            (winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam", "SteamPath"),
+            (winreg.HKEY_LOCAL_MACHINE, r"Software\Valve\Steam", "InstallPath"),
+            (winreg.HKEY_LOCAL_MACHINE, r"Software\WOW6432Node\Valve\Steam", "InstallPath"),
+        ]
+
+        for root, key_path, value_name in registry_locations:
+            try:
+                with winreg.OpenKey(root, key_path) as key:
+                    value, _ = winreg.QueryValueEx(key, value_name)
+                    if value:
+                        value_path = Path(value)
+                        if value_path.suffix.lower() == ".exe":
+                            candidates.append(value_path)
+                        else:
+                            candidates.append(value_path / "steam.exe")
+            except Exception:
+                pass
+
+    except Exception:
+        pass
+
+    for candidate in candidates:
+        if path_exists(candidate):
+            return str(candidate)
+
+    return None
+
+
+def find_discord_installation():
+    if not is_windows():
+        return None
+
+    candidates = []
+
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    program_files = os.environ.get("ProgramFiles")
+    program_files_x86 = os.environ.get("ProgramFiles(x86)")
+
+    if local_app_data:
+        discord_dir = Path(local_app_data) / "Discord"
+
+        candidates.append(discord_dir / "Update.exe")
+
+        if discord_dir.exists():
+            try:
+                app_dirs = sorted(
+                    [
+                        path
+                        for path in discord_dir.iterdir()
+                        if path.is_dir() and path.name.lower().startswith("app-")
+                    ],
+                    reverse=True
+                )
+
+                for app_dir in app_dirs:
+                    candidates.append(app_dir / "Discord.exe")
+            except Exception:
+                pass
+
+    if program_files:
+        candidates.append(Path(program_files) / "Discord" / "Discord.exe")
+
+    if program_files_x86:
+        candidates.append(Path(program_files_x86) / "Discord" / "Discord.exe")
+
+    for candidate in candidates:
+        if path_exists(candidate):
+            return str(candidate)
+
+    return None
+
+
+def find_installed_app(installer_key):
+    if installer_key == "steam":
+        return find_steam_installation()
+
+    if installer_key == "discord":
+        return find_discord_installation()
+
+    return None
+
+
+def open_installed_app(installer_key, app_path):
+    if not is_windows() or not app_path:
+        return
+
+    try:
+        if installer_key == "discord" and Path(app_path).name.lower() == "update.exe":
+            subprocess.Popen([app_path, "--processStart", "Discord.exe"])
+            return
+
+        os.startfile(app_path)
+
+    except Exception:
+        pass
+
+
 def get_windows_pc_info():
     script = r"""
 $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1 Name
@@ -481,12 +623,18 @@ def download_and_run_installer(parent, installer_key, language):
     name = installer["name"]
 
     if not is_windows():
+        webbrowser.open(installer["fallback_url"])
+        return
+
+    installed_path = find_installed_app(installer_key)
+
+    if installed_path:
         QMessageBox.information(
             parent,
-            t["install_title"].format(name=name),
-            t["install_only_windows"].format(name=name)
+            t["already_installed_title"].format(name=name),
+            t["already_installed_text"].format(name=name, path=installed_path)
         )
-        webbrowser.open(installer["fallback_url"])
+        open_installed_app(installer_key, installed_path)
         return
 
     reply = QMessageBox.question(
@@ -519,10 +667,16 @@ def download_and_run_installer(parent, installer_key, language):
             t["download_text"].format(name=name)
         )
 
-        with urllib.request.urlopen(request, timeout=60) as response:
+        with urllib.request.urlopen(request, timeout=120) as response:
             data = response.read()
 
+        if not data:
+            raise RuntimeError("Stažený instalátor je prázdný.")
+
         installer_path.write_bytes(data)
+
+        if not installer_path.exists() or installer_path.stat().st_size <= 0:
+            raise RuntimeError("Instalátor se nepodařilo uložit.")
 
         if installer_path.suffix.lower() == ".msi":
             subprocess.Popen(["msiexec", "/i", str(installer_path)])
@@ -684,6 +838,83 @@ class LangButton(QPushButton):
             painter.drawRect(x, y + stripe * 2, w, h - stripe * 2)
 
 
+class SocialButton(QPushButton):
+    def __init__(self, text, social_type):
+        super().__init__(text)
+        self.social_type = social_type
+        self.setObjectName("FooterSocialButton")
+        self.setCursor(Qt.PointingHandCursor)
+        self.setFixedHeight(42)
+        self.setMinimumWidth(118)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        rect = self.rect().adjusted(1, 1, -1, -1)
+
+        if self.underMouse():
+            bg = QColor("#ffffff")
+            border = QColor(36, 79, 136, 72)
+            icon_bg = QColor("#244f88")
+            icon_color = QColor("#ffffff")
+        else:
+            bg = QColor(255, 255, 255, 215)
+            border = QColor(36, 79, 136, 36)
+            icon_bg = QColor(36, 79, 136, 22)
+            icon_color = QColor("#244f88")
+
+        painter.setPen(QPen(border, 1))
+        painter.setBrush(bg)
+        painter.drawRoundedRect(rect, 10, 10)
+
+        icon_rect = QRectF(14, 9, 24, 24)
+
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(icon_bg)
+        painter.drawRoundedRect(icon_rect, 7, 7)
+
+        painter.setPen(icon_color)
+
+        if self.social_type == "facebook":
+            font = painter.font()
+            font.setBold(True)
+            font.setPixelSize(18)
+            painter.setFont(font)
+            painter.drawText(icon_rect, Qt.AlignCenter, "f")
+
+        elif self.social_type == "instagram":
+            pen = QPen(icon_color, 2)
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawRoundedRect(icon_rect.adjusted(6, 6, -6, -6), 4, 4)
+            painter.drawEllipse(QRectF(icon_rect.center().x() - 3.5, icon_rect.center().y() - 3.5, 7, 7))
+            painter.setBrush(icon_color)
+            painter.setPen(Qt.NoPen)
+            painter.drawEllipse(QRectF(icon_rect.right() - 9, icon_rect.top() + 7, 3.2, 3.2))
+
+        elif self.social_type == "discord":
+            painter.setBrush(icon_color)
+            painter.setPen(Qt.NoPen)
+            painter.drawRoundedRect(QRectF(icon_rect.left() + 5, icon_rect.top() + 7, 14, 9), 4, 4)
+            painter.setBrush(icon_bg)
+            painter.drawEllipse(QRectF(icon_rect.left() + 8, icon_rect.top() + 10, 2.6, 2.6))
+            painter.drawEllipse(QRectF(icon_rect.left() + 13.5, icon_rect.top() + 10, 2.6, 2.6))
+
+        font = painter.font()
+        font.setBold(False)
+        font.setPixelSize(14)
+        painter.setFont(font)
+        painter.setPen(QColor("#244f88"))
+        painter.drawText(
+            QRectF(46, 0, self.width() - 52, self.height()),
+            Qt.AlignVCenter | Qt.AlignLeft,
+            self.text()
+        )
+
+        painter.end()
+
+
 class TileButton(QPushButton):
     def __init__(self, title, subtitle, url=None, installer_key=None, language="cz"):
         super().__init__()
@@ -747,8 +978,7 @@ class HelloCompStart(QWidget):
         self.logo_path = find_logo()
 
         self.setWindowTitle(TRANSLATIONS[self.language]["window_title"])
-        self.resize(1180, 760)
-        self.setMinimumSize(1040, 680)
+        self.setFixedSize(APP_WIDTH, APP_HEIGHT)
 
         if APP_ICON.exists():
             self.setWindowIcon(QIcon(str(APP_ICON)))
@@ -901,19 +1131,13 @@ class HelloCompStart(QWidget):
         footer_social_layout.setContentsMargins(0, 0, 0, 0)
         footer_social_layout.setSpacing(8)
 
-        self.footer_facebook = QPushButton("Facebook")
-        self.footer_facebook.setObjectName("FooterSocialButton")
-        self.footer_facebook.setCursor(Qt.PointingHandCursor)
+        self.footer_facebook = SocialButton("Facebook", "facebook")
         self.footer_facebook.clicked.connect(lambda: open_url("https://www.facebook.com/HelloComp.cz"))
 
-        self.footer_instagram = QPushButton("Instagram")
-        self.footer_instagram.setObjectName("FooterSocialButton")
-        self.footer_instagram.setCursor(Qt.PointingHandCursor)
+        self.footer_instagram = SocialButton("Instagram", "instagram")
         self.footer_instagram.clicked.connect(lambda: open_url("https://www.instagram.com/hellocompcz"))
 
-        self.footer_discord = QPushButton("Discord")
-        self.footer_discord.setObjectName("FooterSocialButton")
-        self.footer_discord.setCursor(Qt.PointingHandCursor)
+        self.footer_discord = SocialButton("Discord", "discord")
         self.footer_discord.clicked.connect(lambda: open_url("https://discord.com/invite/dQDDXyek9x"))
 
         footer_social_layout.addWidget(self.footer_facebook)
@@ -1350,20 +1574,11 @@ class HelloCompStart(QWidget):
             }}
 
             #FooterSocialButton {{
-                min-height: 34px;
-                padding: 6px 14px;
-                border-radius: 10px;
-                border: 1px solid rgba(36, 79, 136, 0.14);
-                background: rgba(255, 255, 255, 0.82);
+                background: transparent;
+                border: none;
                 color: #244f88;
                 font-size: 13px;
                 font-weight: 400;
-            }}
-
-            #FooterSocialButton:hover {{
-                background: #ffffff;
-                border: 1px solid rgba(36, 79, 136, 0.28);
-                color: #244f88;
             }}
         """)
 
