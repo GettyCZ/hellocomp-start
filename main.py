@@ -1,9 +1,14 @@
+import os
+import platform
+import subprocess
 import sys
+import tempfile
+import urllib.request
 import webbrowser
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QRectF
-from PySide6.QtGui import QFontDatabase, QPixmap, QPainter
+from PySide6.QtGui import QFontDatabase, QPixmap, QPainter, QIcon
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QApplication,
@@ -14,11 +19,15 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QFrame,
     QStackedWidget,
+    QMessageBox,
 )
 
 
 APP_DIR = Path(__file__).resolve().parent
-ASSETS_DIR = APP_DIR / "assets"
+BASE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
+ASSETS_DIR = BASE_DIR / "assets"
+
+APP_ICON = ASSETS_DIR / "hellocomp_icon.ico"
 
 LOGO_CANDIDATES = [
     ASSETS_DIR / "hellocomp_logo.svg",
@@ -37,6 +46,22 @@ FONT_CANDIDATES = [
     ASSETS_DIR / "hellocomp_font.ttf",
     ASSETS_DIR / "hellocomp_font.otf",
 ]
+
+
+SOFTWARE_INSTALLERS = {
+    "steam": {
+        "name": "Steam",
+        "url": "https://cdn.cloudflare.steamstatic.com/client/installer/SteamSetup.exe",
+        "filename": "SteamSetup.exe",
+        "fallback_url": "https://store.steampowered.com/about/",
+    },
+    "discord": {
+        "name": "Discord",
+        "url": "https://discord.com/api/download?platform=win",
+        "filename": "DiscordSetup.exe",
+        "fallback_url": "https://discord.com/download",
+    },
+}
 
 
 def find_first_existing(paths):
@@ -79,6 +104,77 @@ def find_logo():
         print(f" - {path}")
 
     return None
+
+
+def is_windows():
+    return platform.system().lower() == "windows"
+
+
+def download_and_run_installer(parent, installer_key):
+    installer = SOFTWARE_INSTALLERS.get(installer_key)
+
+    if not installer:
+        QMessageBox.warning(parent, "Instalace", "Instalátor nebyl nalezen.")
+        return
+
+    name = installer["name"]
+
+    if not is_windows():
+        QMessageBox.information(
+            parent,
+            "Instalace",
+            f"Přímá instalace je dostupná ve Windows.\n\nNa tomto systému otevřu stránku pro stažení: {name}."
+        )
+        webbrowser.open(installer["fallback_url"])
+        return
+
+    reply = QMessageBox.question(
+        parent,
+        f"Instalovat {name}",
+        f"Aplikace stáhne oficiální instalátor {name} a spustí ho.\n\nPokračovat?",
+        QMessageBox.Yes | QMessageBox.No,
+        QMessageBox.Yes
+    )
+
+    if reply != QMessageBox.Yes:
+        return
+
+    try:
+        temp_dir = Path(tempfile.gettempdir()) / "HelloCompStart"
+        temp_dir.mkdir(parents=True, exist_ok=True)
+
+        installer_path = temp_dir / installer["filename"]
+
+        request = urllib.request.Request(
+            installer["url"],
+            headers={
+                "User-Agent": "Mozilla/5.0 HelloCompStart/1.0"
+            }
+        )
+
+        QMessageBox.information(
+            parent,
+            f"Stahuji {name}",
+            f"Instalátor {name} se začne stahovat.\nPo dokončení se automaticky spustí."
+        )
+
+        with urllib.request.urlopen(request, timeout=60) as response:
+            data = response.read()
+
+        installer_path.write_bytes(data)
+
+        if installer_path.suffix.lower() == ".msi":
+            subprocess.Popen(["msiexec", "/i", str(installer_path)])
+        else:
+            os.startfile(str(installer_path))
+
+    except Exception as error:
+        QMessageBox.warning(
+            parent,
+            f"Instalace {name}",
+            f"Instalátor se nepodařilo stáhnout nebo spustit.\n\nOtevřu oficiální stránku pro stažení.\n\nChyba:\n{error}"
+        )
+        webbrowser.open(installer["fallback_url"])
 
 
 class SvgLogo(QLabel):
@@ -132,15 +228,20 @@ class MenuButton(QPushButton):
 
 
 class TileButton(QPushButton):
-    def __init__(self, title, subtitle, url=None):
+    def __init__(self, title, subtitle, url=None, installer_key=None):
         super().__init__()
         self.url = url
+        self.installer_key = installer_key
         self.setCursor(Qt.PointingHandCursor)
         self.setMinimumHeight(128)
         self.setText(f"{title}\n{subtitle}")
-        self.clicked.connect(self.open_url)
+        self.clicked.connect(self.handle_click)
 
-    def open_url(self):
+    def handle_click(self):
+        if self.installer_key:
+            download_and_run_installer(self.window(), self.installer_key)
+            return
+
         if self.url:
             webbrowser.open(self.url)
 
@@ -155,6 +256,9 @@ class HelloCompStart(QWidget):
         self.setWindowTitle("HelloComp Start")
         self.resize(1180, 720)
         self.setMinimumSize(980, 620)
+
+        if APP_ICON.exists():
+            self.setWindowIcon(QIcon(str(APP_ICON)))
 
         self.menu_buttons = []
 
@@ -295,17 +399,20 @@ class HelloCompStart(QWidget):
             (
                 "Návod k použití počítače",
                 "Základní informace po prvním spuštění",
-                "https://www.hellocomp.cz/"
+                "https://www.hellocomp.cz/",
+                None
             ),
             (
                 "Aktivace Windows",
                 "Jak ověřit aktivaci systému Windows",
-                "https://www.hellocomp.cz/"
+                "https://www.hellocomp.cz/",
+                None
             ),
             (
                 "Doporučené nastavení",
                 "Tipy pro stabilní a plynulý provoz",
-                "https://www.hellocomp.cz/"
+                "https://www.hellocomp.cz/",
+                None
             ),
         ])
 
@@ -324,17 +431,20 @@ class HelloCompStart(QWidget):
             (
                 "Kontaktovat podporu",
                 "Otevřít kontaktní stránku HelloComp",
-                "https://www.hellocomp.cz/kontakty/"
+                "https://www.hellocomp.cz/kontakty/",
+                None
             ),
             (
                 "Napsat e-mail",
                 "Rychlý kontakt na podporu",
-                "mailto:info@hellocomp.cz"
+                "mailto:info@hellocomp.cz",
+                None
             ),
             (
                 "Časté otázky",
                 "Odpovědi na běžné dotazy",
-                "https://www.hellocomp.cz/"
+                "https://www.hellocomp.cz/",
+                None
             ),
         ])
 
@@ -351,24 +461,34 @@ class HelloCompStart(QWidget):
 
         tiles = self.create_tiles_row([
             (
-                "Steam",
-                "Herní platforma pro PC hry",
-                "https://store.steampowered.com/"
+                "Instalovat Steam",
+                "Stáhnout a spustit oficiální instalátor",
+                None,
+                "steam"
             ),
             (
-                "Discord",
-                "Komunikace s přáteli a komunitou",
-                "https://discord.com/"
+                "Instalovat Discord",
+                "Stáhnout a spustit oficiální instalátor",
+                None,
+                "discord"
             ),
             (
                 "NVIDIA App",
                 "Ovladače a nástroje pro nVidia grafiky",
-                "https://www.nvidia.com/"
+                "https://www.nvidia.com/",
+                None
             ),
             (
                 "AMD Adrenalin",
                 "Ovladače a nástroje pro AMD grafiky",
-                "https://www.amd.com/"
+                "https://www.amd.com/",
+                None
+            ),
+            (
+                "Epic Games Launcher",
+                "Otevřít oficiální stránku pro stažení",
+                "https://store.epicgames.com/download",
+                None
             ),
         ])
 
@@ -387,17 +507,20 @@ class HelloCompStart(QWidget):
             (
                 "Reklamace",
                 "Informace k reklamaci zboží",
-                "https://www.hellocomp.cz/"
+                "https://www.hellocomp.cz/",
+                None
             ),
             (
                 "Servis počítače",
                 "Pomoc s opravou nebo údržbou",
-                "https://www.hellocomp.cz/"
+                "https://www.hellocomp.cz/",
+                None
             ),
             (
                 "Bezpečné odeslání PC",
                 "Jak správně zabalit počítač",
-                "https://www.hellocomp.cz/"
+                "https://www.hellocomp.cz/",
+                None
             ),
         ])
 
@@ -416,22 +539,26 @@ class HelloCompStart(QWidget):
             (
                 "Discord",
                 "Připojit se ke komunitě",
-                "https://discord.com/"
+                "https://discord.com/",
+                None
             ),
             (
                 "Instagram",
                 "Sledovat novinky a sestavy",
-                "https://www.instagram.com/"
+                "https://www.instagram.com/",
+                None
             ),
             (
                 "Facebook",
                 "Sledovat HelloComp",
-                "https://www.facebook.com/"
+                "https://www.facebook.com/",
+                None
             ),
             (
                 "Hodnocení",
                 "Pomozte nám zpětnou vazbou",
-                "https://www.hellocomp.cz/"
+                "https://www.hellocomp.cz/",
+                None
             ),
         ])
 
@@ -468,8 +595,8 @@ class HelloCompStart(QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.setSpacing(22)
 
-        for title, subtitle, url in items:
-            tile = TileButton(title, subtitle, url)
+        for title, subtitle, url, installer_key in items:
+            tile = TileButton(title, subtitle, url, installer_key)
             layout.addWidget(tile)
 
         return wrapper
@@ -630,6 +757,11 @@ class HelloCompStart(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    if APP_ICON.exists():
+        app.setWindowIcon(QIcon(str(APP_ICON)))
+
     window = HelloCompStart()
     window.show()
+
     sys.exit(app.exec())
