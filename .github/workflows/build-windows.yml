@@ -24,10 +24,10 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
 
-      - name: Build EXE with PyInstaller
+      - name: Build single EXE with PyInstaller
         shell: cmd
         run: |
-          pyinstaller --noconfirm --windowed --onedir ^
+          pyinstaller --noconfirm --windowed --onefile ^
             --name "HelloComp Start" ^
             --icon "assets\hellocomp_icon.ico" ^
             --add-data "assets;assets" ^
@@ -36,10 +36,10 @@ jobs:
       - name: Create ZIP package
         shell: powershell
         run: |
-          Compress-Archive -Path "dist\HelloComp Start\*" -DestinationPath "HelloComp_Start_Windows.zip"
+          Compress-Archive -Path "dist\HelloComp Start.exe" -DestinationPath "HelloComp_Start_Windows_OneFile.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HelloComp_Start_Windows
-          path: HelloComp_Start_Windows.zip
+          name: HelloComp_Start_Windows_OneFile
+          path: HelloComp_Start_Windows_OneFile.zip
