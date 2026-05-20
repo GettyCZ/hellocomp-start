@@ -1,3 +1,4 @@
+import json
 import os
 import platform
 import subprocess
@@ -7,8 +8,16 @@ import urllib.request
 import webbrowser
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QRectF
-from PySide6.QtGui import QFontDatabase, QPixmap, QPainter, QIcon
+from PySide6.QtCore import Qt, QRectF, QPoint
+from PySide6.QtGui import (
+    QFontDatabase,
+    QPixmap,
+    QPainter,
+    QIcon,
+    QColor,
+    QPen,
+    QPolygon,
+)
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QApplication,
@@ -20,8 +29,11 @@ from PySide6.QtWidgets import (
     QFrame,
     QStackedWidget,
     QMessageBox,
+    QGridLayout,
 )
 
+
+APP_VERSION = "1.7"
 
 APP_DIR = Path(__file__).resolve().parent
 BASE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
@@ -66,19 +78,35 @@ SOFTWARE_INSTALLERS = {
 
 TRANSLATIONS = {
     "cz": {
-        "lang_label": "🇨🇿 CZ",
+        "lang_label": "CZ",
         "window_title": "HelloComp Start",
         "header_title": "Můj počítač HelloComp",
         "header_subtitle": "První spuštění, podpora, servis a doporučený software",
-        "footer": "HelloComp.cz © 2026  |  verze 1.0",
+        "footer": f"HelloComp.cz © 2026  |  verze {APP_VERSION}",
+        "footer_social_title": "Sledujte nás",
 
         "menu": [
+            "Můj počítač",
             "První kroky",
             "Potřebuji podporu",
             "Volitelný software",
             "Potřebuji servis",
-            "Staňte se fanouškem",
         ],
+
+        "my_pc_title": "Můj počítač",
+        "my_pc_text": "Přehled hlavních informací o této sestavě.",
+        "my_pc_refresh": "Načíst informace znovu",
+        "my_pc_windows_only": "Detailní informace se automaticky načtou ve Windows verzi aplikace.",
+        "my_pc_loading_error": "Informace se nepodařilo načíst.",
+
+        "pc_fields": {
+            "manufacturer": "Výrobce",
+            "cpu": "Procesor",
+            "gpu": "Grafická karta",
+            "ram": "Operační paměť",
+            "drives": "Disky",
+            "baseboard": "Základní deska",
+        },
 
         "first_steps_title": "První kroky s novým počítačem",
         "first_steps_text": "Pro váš nový počítač jsme připravili základní návody a doporučení.",
@@ -114,15 +142,6 @@ TRANSLATIONS = {
             ("Bezpečné odeslání PC", "Jak správně zabalit počítač"),
         ],
 
-        "fans_title": "Staňte se fanouškem HelloComp",
-        "fans_text": "Sledujte nás, přidejte se do komunity nebo nám zanechte hodnocení.",
-        "fans_tiles": [
-            ("Discord", "Připojit se ke komunitě"),
-            ("Instagram", "Sledovat novinky a sestavy"),
-            ("Facebook", "Sledovat HelloComp"),
-            ("Hodnocení", "Pomozte nám zpětnou vazbou"),
-        ],
-
         "install_only_windows": "Přímá instalace je dostupná ve Windows.\n\nNa tomto systému otevřu stránku pro stažení: {name}.",
         "installer_missing": "Instalátor nebyl nalezen.",
         "install_title": "Instalovat {name}",
@@ -134,19 +153,35 @@ TRANSLATIONS = {
     },
 
     "sk": {
-        "lang_label": "🇸🇰 SK",
+        "lang_label": "SK",
         "window_title": "HelloComp Start",
         "header_title": "Môj počítač HelloComp",
         "header_subtitle": "Prvé spustenie, podpora, servis a odporúčaný softvér",
-        "footer": "HelloComp.cz © 2026  |  verzia 1.0",
+        "footer": f"HelloComp.cz © 2026  |  verzia {APP_VERSION}",
+        "footer_social_title": "Sledujte nás",
 
         "menu": [
+            "Môj počítač",
             "Prvé kroky",
             "Potrebujem podporu",
             "Voliteľný softvér",
             "Potrebujem servis",
-            "Staňte sa fanúšikom",
         ],
+
+        "my_pc_title": "Môj počítač",
+        "my_pc_text": "Prehľad hlavných informácií o tejto zostave.",
+        "my_pc_refresh": "Načítať informácie znova",
+        "my_pc_windows_only": "Detailné informácie sa automaticky načítajú vo Windows verzii aplikácie.",
+        "my_pc_loading_error": "Informácie sa nepodarilo načítať.",
+
+        "pc_fields": {
+            "manufacturer": "Výrobca",
+            "cpu": "Procesor",
+            "gpu": "Grafická karta",
+            "ram": "Operačná pamäť",
+            "drives": "Disky",
+            "baseboard": "Základná doska",
+        },
 
         "first_steps_title": "Prvé kroky s novým počítačom",
         "first_steps_text": "Pre váš nový počítač sme pripravili základné návody a odporúčania.",
@@ -182,15 +217,6 @@ TRANSLATIONS = {
             ("Bezpečné odoslanie PC", "Ako správne zabaliť počítač"),
         ],
 
-        "fans_title": "Staňte sa fanúšikom HelloComp",
-        "fans_text": "Sledujte nás, pridajte sa do komunity alebo nám zanechajte hodnotenie.",
-        "fans_tiles": [
-            ("Discord", "Pripojiť sa ku komunite"),
-            ("Instagram", "Sledovať novinky a zostavy"),
-            ("Facebook", "Sledovať HelloComp"),
-            ("Hodnotenie", "Pomôžte nám spätnou väzbou"),
-        ],
-
         "install_only_windows": "Priama inštalácia je dostupná vo Windows.\n\nNa tomto systéme otvorím stránku na stiahnutie: {name}.",
         "installer_missing": "Inštalátor nebol nájdený.",
         "install_title": "Inštalovať {name}",
@@ -202,19 +228,35 @@ TRANSLATIONS = {
     },
 
     "hu": {
-        "lang_label": "🇭🇺 HU",
+        "lang_label": "HU",
         "window_title": "HelloComp Start",
         "header_title": "Saját HelloComp számítógépem",
         "header_subtitle": "Első indítás, támogatás, szerviz és ajánlott szoftverek",
-        "footer": "HelloComp.cz © 2026  |  verzió 1.0",
+        "footer": f"HelloComp.cz © 2026  |  verzió {APP_VERSION}",
+        "footer_social_title": "Kövessen minket",
 
         "menu": [
+            "Saját gépem",
             "Első lépések",
             "Támogatásra van szükségem",
             "Választható szoftverek",
             "Szervizre van szükségem",
-            "Legyen rajongónk",
         ],
+
+        "my_pc_title": "Saját gépem",
+        "my_pc_text": "A számítógép fő adatainak áttekintése.",
+        "my_pc_refresh": "Információk újratöltése",
+        "my_pc_windows_only": "A részletes információk automatikusan betöltődnek a Windows verzióban.",
+        "my_pc_loading_error": "Az információkat nem sikerült betölteni.",
+
+        "pc_fields": {
+            "manufacturer": "Gyártó",
+            "cpu": "Processzor",
+            "gpu": "Grafikus kártya",
+            "ram": "Memória",
+            "drives": "Meghajtók",
+            "baseboard": "Alaplap",
+        },
 
         "first_steps_title": "Első lépések az új számítógéppel",
         "first_steps_text": "Az új számítógépéhez alapvető útmutatókat és ajánlásokat készítettünk.",
@@ -248,15 +290,6 @@ TRANSLATIONS = {
             ("Reklamáció", "Információk a termék reklamációjához"),
             ("Számítógép szerviz", "Segítség javításhoz vagy karbantartáshoz"),
             ("PC biztonságos küldése", "Hogyan csomagolja be helyesen a számítógépet"),
-        ],
-
-        "fans_title": "Legyen a HelloComp rajongója",
-        "fans_text": "Kövessen minket, csatlakozzon a közösséghez, vagy hagyjon értékelést.",
-        "fans_tiles": [
-            ("Discord", "Csatlakozás a közösséghez"),
-            ("Instagram", "Újdonságok és gépösszeállítások követése"),
-            ("Facebook", "HelloComp követése"),
-            ("Értékelés", "Segítsen nekünk visszajelzéssel"),
         ],
 
         "install_only_windows": "A közvetlen telepítés Windows alatt érhető el.\n\nEzen a rendszeren megnyitom a letöltési oldalt: {name}.",
@@ -322,6 +355,121 @@ def open_url(url):
         webbrowser.open(url)
 
 
+def run_powershell_json(command):
+    completed = subprocess.run(
+        [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            command,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=25,
+        encoding="utf-8",
+        errors="replace",
+    )
+
+    if completed.returncode != 0:
+        raise RuntimeError(completed.stderr.strip() or completed.stdout.strip())
+
+    output = completed.stdout.strip()
+
+    if not output:
+        return None
+
+    return json.loads(output)
+
+
+def normalize_list(value):
+    if value is None:
+        return []
+
+    if isinstance(value, list):
+        return value
+
+    return [value]
+
+
+def format_gb(bytes_value):
+    try:
+        return f"{round(int(bytes_value) / 1024 / 1024 / 1024)} GB"
+    except Exception:
+        return ""
+
+
+def get_windows_pc_info():
+    script = r"""
+$cpu = Get-CimInstance Win32_Processor | Select-Object -First 1 Name
+$gpus = Get-CimInstance Win32_VideoController | Select-Object Name
+$ram = Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum
+$drives = Get-CimInstance Win32_DiskDrive | Select-Object Model, Size, MediaType
+$board = Get-CimInstance Win32_BaseBoard | Select-Object Manufacturer, Product
+
+[PSCustomObject]@{
+    Cpu = $cpu.Name
+    Gpu = $gpus
+    RamBytes = $ram.Sum
+    Drives = $drives
+    BoardManufacturer = $board.Manufacturer
+    BoardProduct = $board.Product
+} | ConvertTo-Json -Depth 5
+"""
+
+    data = run_powershell_json(script)
+
+    gpus = []
+    for gpu in normalize_list(data.get("Gpu")):
+        name = gpu.get("Name") if isinstance(gpu, dict) else None
+        if name:
+            gpus.append(name)
+
+    drives = []
+    for drive in normalize_list(data.get("Drives")):
+        if not isinstance(drive, dict):
+            continue
+
+        model = drive.get("Model") or ""
+        size = format_gb(drive.get("Size"))
+        media_type = drive.get("MediaType") or ""
+
+        parts = [part for part in [model, size, media_type] if part]
+        if parts:
+            drives.append(" / ".join(parts))
+
+    baseboard_parts = [
+        data.get("BoardManufacturer"),
+        data.get("BoardProduct"),
+    ]
+
+    return {
+        "manufacturer": "HelloComp",
+        "cpu": data.get("Cpu") or "—",
+        "gpu": "\n".join(gpus) if gpus else "—",
+        "ram": format_gb(data.get("RamBytes")) or "—",
+        "drives": "\n".join(drives) if drives else "—",
+        "baseboard": " ".join([x for x in baseboard_parts if x]) or "—",
+    }
+
+
+def get_pc_info(language):
+    if is_windows():
+        return get_windows_pc_info()
+
+    t = TRANSLATIONS[language]
+
+    return {
+        "manufacturer": "HelloComp",
+        "cpu": platform.processor() or platform.machine() or "—",
+        "gpu": t["my_pc_windows_only"],
+        "ram": t["my_pc_windows_only"],
+        "drives": t["my_pc_windows_only"],
+        "baseboard": t["my_pc_windows_only"],
+    }
+
+
 def download_and_run_installer(parent, installer_key, language):
     t = TRANSLATIONS[language]
     installer = SOFTWARE_INSTALLERS.get(installer_key)
@@ -361,7 +509,7 @@ def download_and_run_installer(parent, installer_key, language):
         request = urllib.request.Request(
             installer["url"],
             headers={
-                "User-Agent": "Mozilla/5.0 HelloCompStart/1.0"
+                "User-Agent": f"Mozilla/5.0 HelloCompStart/{APP_VERSION}"
             }
         )
 
@@ -391,9 +539,11 @@ def download_and_run_installer(parent, installer_key, language):
 
 
 class SvgLogo(QLabel):
-    def __init__(self, svg_path, width=300, height=82):
+    def __init__(self, svg_path, width=310, height=88, scale_factor=0.76, y_offset=2):
         super().__init__()
         self.svg_path = str(svg_path)
+        self.scale_factor = scale_factor
+        self.y_offset = y_offset
         self.setObjectName("LogoImage")
         self.setFixedSize(width, height)
         self.setAlignment(Qt.AlignCenter)
@@ -402,7 +552,9 @@ class SvgLogo(QLabel):
     def render_svg(self):
         renderer = QSvgRenderer(self.svg_path)
 
-        pixmap = QPixmap(self.width(), self.height())
+        dpr = max(self.devicePixelRatioF(), 1.0)
+        pixmap = QPixmap(int(self.width() * dpr), int(self.height() * dpr))
+        pixmap.setDevicePixelRatio(dpr)
         pixmap.fill(Qt.transparent)
 
         default_size = renderer.defaultSize()
@@ -413,19 +565,19 @@ class SvgLogo(QLabel):
             scale = min(
                 self.width() / default_size.width(),
                 self.height() / default_size.height()
-            )
+            ) * self.scale_factor
 
             target_width = default_size.width() * scale
             target_height = default_size.height() * scale
 
             x = (self.width() - target_width) / 2
-            y = (self.height() - target_height) / 2
+            y = ((self.height() - target_height) / 2) + self.y_offset
 
             target = QRectF(x, y, target_width, target_height)
 
         painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
         renderer.render(painter, target)
         painter.end()
 
@@ -446,8 +598,90 @@ class LangButton(QPushButton):
         self.language = language
         self.setCursor(Qt.PointingHandCursor)
         self.setCheckable(True)
-        self.setFixedHeight(30)
-        self.setMinimumWidth(62)
+        self.setFixedHeight(34)
+        self.setFixedWidth(78)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        rect = self.rect().adjusted(1, 1, -1, -1)
+
+        if self.isChecked():
+            bg = QColor(255, 255, 255, 46)
+            border = QColor(255, 255, 255, 96)
+            text_color = QColor(255, 255, 255, 245)
+        elif self.underMouse():
+            bg = QColor(255, 255, 255, 30)
+            border = QColor(255, 255, 255, 60)
+            text_color = QColor(255, 255, 255, 230)
+        else:
+            bg = QColor(255, 255, 255, 18)
+            border = QColor(255, 255, 255, 36)
+            text_color = QColor(255, 255, 255, 190)
+
+        painter.setPen(QPen(border, 1))
+        painter.setBrush(bg)
+        painter.drawRoundedRect(rect, 8, 8)
+
+        flag_x = 10
+        flag_y = int((self.height() - 12) / 2)
+        flag_w = 18
+        flag_h = 12
+
+        self.draw_flag(painter, flag_x, flag_y, flag_w, flag_h)
+
+        painter.setPen(text_color)
+        painter.setFont(self.font())
+        painter.drawText(
+            QRectF(36, 0, self.width() - 40, self.height()),
+            Qt.AlignVCenter | Qt.AlignLeft,
+            self.text()
+        )
+
+        painter.end()
+
+    def draw_flag(self, painter, x, y, w, h):
+        painter.setPen(Qt.NoPen)
+
+        if self.language == "cz":
+            painter.setBrush(QColor("#ffffff"))
+            painter.drawRect(x, y, w, h // 2)
+
+            painter.setBrush(QColor("#d7141a"))
+            painter.drawRect(x, y + h // 2, w, h - h // 2)
+
+            triangle = QPolygon([
+                QPoint(x, y),
+                QPoint(x + int(w * 0.52), y + int(h / 2)),
+                QPoint(x, y + h),
+            ])
+            painter.setBrush(QColor("#11457e"))
+            painter.drawPolygon(triangle)
+
+        elif self.language == "sk":
+            stripe = h // 3
+
+            painter.setBrush(QColor("#ffffff"))
+            painter.drawRect(x, y, w, stripe)
+
+            painter.setBrush(QColor("#0b4ea2"))
+            painter.drawRect(x, y + stripe, w, stripe)
+
+            painter.setBrush(QColor("#ee1c25"))
+            painter.drawRect(x, y + stripe * 2, w, h - stripe * 2)
+
+        elif self.language == "hu":
+            stripe = h // 3
+
+            painter.setBrush(QColor("#ce2939"))
+            painter.drawRect(x, y, w, stripe)
+
+            painter.setBrush(QColor("#ffffff"))
+            painter.drawRect(x, y + stripe, w, stripe)
+
+            painter.setBrush(QColor("#477050"))
+            painter.drawRect(x, y + stripe * 2, w, h - stripe * 2)
 
 
 class TileButton(QPushButton):
@@ -476,6 +710,34 @@ class TileButton(QPushButton):
             open_url(self.url)
 
 
+class PcInfoCard(QFrame):
+    def __init__(self, key):
+        super().__init__()
+        self.key = key
+        self.setObjectName("PcInfoCard")
+        self.setMinimumHeight(104)
+        self.setMaximumHeight(118)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(18, 15, 18, 15)
+        layout.setSpacing(8)
+
+        self.title_label = QLabel()
+        self.title_label.setObjectName("PcInfoTitle")
+
+        self.value_label = QLabel()
+        self.value_label.setObjectName("PcInfoValue")
+        self.value_label.setWordWrap(True)
+        self.value_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+
+        layout.addWidget(self.title_label)
+        layout.addWidget(self.value_label)
+
+    def update_card(self, title, value):
+        self.title_label.setText(title)
+        self.value_label.setText(value or "—")
+
+
 class HelloCompStart(QWidget):
     def __init__(self):
         super().__init__()
@@ -485,16 +747,17 @@ class HelloCompStart(QWidget):
         self.logo_path = find_logo()
 
         self.setWindowTitle(TRANSLATIONS[self.language]["window_title"])
-        self.resize(1180, 720)
-        self.setMinimumSize(980, 620)
+        self.resize(1180, 760)
+        self.setMinimumSize(1040, 680)
 
-        if is_windows() and APP_ICON.exists():
+        if APP_ICON.exists():
             self.setWindowIcon(QIcon(str(APP_ICON)))
 
         self.menu_buttons = []
         self.lang_buttons = []
         self.page_labels = {}
         self.tile_groups = {}
+        self.pc_cards = {}
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -504,16 +767,13 @@ class HelloCompStart(QWidget):
         menu = self.create_menu()
 
         self.pages = QStackedWidget()
+        self.pages.addWidget(self.create_my_pc_page())
         self.pages.addWidget(self.create_first_steps_page())
         self.pages.addWidget(self.create_support_page())
         self.pages.addWidget(self.create_software_page())
         self.pages.addWidget(self.create_service_page())
-        self.pages.addWidget(self.create_fans_page())
 
-        self.footer = QLabel()
-        self.footer.setObjectName("Footer")
-        self.footer.setAlignment(Qt.AlignCenter)
-        self.footer.setFixedHeight(42)
+        self.footer = self.create_footer()
 
         root.addWidget(header)
         root.addWidget(menu)
@@ -523,11 +783,12 @@ class HelloCompStart(QWidget):
         self.set_active_menu(0)
         self.apply_styles()
         self.update_language("cz")
+        self.load_pc_information()
 
     def create_header(self):
         header = QFrame()
         header.setObjectName("Header")
-        header.setFixedHeight(118)
+        header.setFixedHeight(146)
 
         layout = QHBoxLayout(header)
         layout.setContentsMargins(44, 0, 44, 0)
@@ -555,7 +816,7 @@ class HelloCompStart(QWidget):
         right_wrapper.setObjectName("HeaderRightWrapper")
 
         right_layout = QVBoxLayout(right_wrapper)
-        right_layout.setContentsMargins(0, 10, 0, 10)
+        right_layout.setContentsMargins(0, 14, 0, 18)
         right_layout.setSpacing(8)
 
         lang_row = QWidget()
@@ -563,7 +824,7 @@ class HelloCompStart(QWidget):
 
         lang_layout = QHBoxLayout(lang_row)
         lang_layout.setContentsMargins(0, 0, 0, 0)
-        lang_layout.setSpacing(6)
+        lang_layout.setSpacing(7)
         lang_layout.addStretch()
 
         for language in ["cz", "sk", "hu"]:
@@ -574,14 +835,14 @@ class HelloCompStart(QWidget):
 
         logo_wrapper = QFrame()
         logo_wrapper.setObjectName("LogoWrapper")
-        logo_wrapper.setFixedSize(330, 74)
+        logo_wrapper.setFixedSize(330, 92)
 
         logo_layout = QVBoxLayout(logo_wrapper)
         logo_layout.setContentsMargins(0, 0, 0, 0)
         logo_layout.setSpacing(0)
 
         if self.logo_path and self.logo_path.suffix.lower() == ".svg":
-            logo = SvgLogo(self.logo_path, width=300, height=68)
+            logo = SvgLogo(self.logo_path, width=310, height=88, scale_factor=0.76, y_offset=2)
             logo_layout.addWidget(logo, alignment=Qt.AlignCenter)
 
         elif self.logo_path and self.logo_path.suffix.lower() in [".png", ".jpg", ".jpeg", ".webp"]:
@@ -591,8 +852,8 @@ class HelloCompStart(QWidget):
             pixmap = QPixmap(str(self.logo_path))
             logo.setPixmap(
                 pixmap.scaled(
-                    300,
-                    68,
+                    310,
+                    88,
                     Qt.KeepAspectRatio,
                     Qt.SmoothTransformation
                 )
@@ -616,6 +877,56 @@ class HelloCompStart(QWidget):
 
         return header
 
+    def create_footer(self):
+        footer = QFrame()
+        footer.setObjectName("Footer")
+        footer.setFixedHeight(64)
+
+        footer_layout = QHBoxLayout(footer)
+        footer_layout.setContentsMargins(44, 0, 44, 0)
+        footer_layout.setSpacing(20)
+
+        self.footer_text = QLabel()
+        self.footer_text.setObjectName("FooterText")
+        self.footer_text.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+
+        self.footer_social_title = QLabel()
+        self.footer_social_title.setObjectName("FooterSocialTitle")
+        self.footer_social_title.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
+
+        self.footer_social = QWidget()
+        self.footer_social.setObjectName("FooterSocial")
+
+        footer_social_layout = QHBoxLayout(self.footer_social)
+        footer_social_layout.setContentsMargins(0, 0, 0, 0)
+        footer_social_layout.setSpacing(8)
+
+        self.footer_facebook = QPushButton("Facebook")
+        self.footer_facebook.setObjectName("FooterSocialButton")
+        self.footer_facebook.setCursor(Qt.PointingHandCursor)
+        self.footer_facebook.clicked.connect(lambda: open_url("https://www.facebook.com/HelloComp.cz"))
+
+        self.footer_instagram = QPushButton("Instagram")
+        self.footer_instagram.setObjectName("FooterSocialButton")
+        self.footer_instagram.setCursor(Qt.PointingHandCursor)
+        self.footer_instagram.clicked.connect(lambda: open_url("https://www.instagram.com/hellocompcz"))
+
+        self.footer_discord = QPushButton("Discord")
+        self.footer_discord.setObjectName("FooterSocialButton")
+        self.footer_discord.setCursor(Qt.PointingHandCursor)
+        self.footer_discord.clicked.connect(lambda: open_url("https://discord.com/invite/dQDDXyek9x"))
+
+        footer_social_layout.addWidget(self.footer_facebook)
+        footer_social_layout.addWidget(self.footer_instagram)
+        footer_social_layout.addWidget(self.footer_discord)
+
+        footer_layout.addWidget(self.footer_text)
+        footer_layout.addStretch()
+        footer_layout.addWidget(self.footer_social_title)
+        footer_layout.addWidget(self.footer_social)
+
+        return footer
+
     def create_menu(self):
         menu = QFrame()
         menu.setObjectName("Menu")
@@ -638,6 +949,57 @@ class HelloCompStart(QWidget):
 
         for i, btn in enumerate(self.menu_buttons):
             btn.setChecked(i == index)
+
+    def create_my_pc_page(self):
+        page = self.create_page_base("my_pc")
+
+        top_row = QWidget()
+        top_row.setObjectName("PcTopRow")
+
+        top_layout = QHBoxLayout(top_row)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setSpacing(12)
+
+        self.refresh_pc_button = QPushButton()
+        self.refresh_pc_button.setObjectName("RefreshPcButton")
+        self.refresh_pc_button.setCursor(Qt.PointingHandCursor)
+        self.refresh_pc_button.setFixedHeight(38)
+        self.refresh_pc_button.clicked.connect(self.load_pc_information)
+
+        top_layout.addStretch()
+        top_layout.addWidget(self.refresh_pc_button)
+
+        grid_wrapper = QWidget()
+        grid_wrapper.setObjectName("PcGridWrapper")
+
+        grid = QGridLayout(grid_wrapper)
+        grid.setContentsMargins(0, 16, 0, 0)
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(16)
+
+        fields = [
+            "manufacturer",
+            "cpu",
+            "gpu",
+            "ram",
+            "drives",
+            "baseboard",
+        ]
+
+        for index, key in enumerate(fields):
+            card = PcInfoCard(key)
+            self.pc_cards[key] = card
+
+            row = index // 3
+            column = index % 3
+
+            grid.addWidget(card, row, column)
+
+        page.layout().addWidget(top_row)
+        page.layout().addWidget(grid_wrapper)
+        page.layout().addStretch()
+
+        return page
 
     def create_first_steps_page(self):
         page = self.create_page_base("first_steps")
@@ -685,25 +1047,13 @@ class HelloCompStart(QWidget):
         page.layout().addStretch()
         return page
 
-    def create_fans_page(self):
-        page = self.create_page_base("fans")
-        tiles = self.create_tiles_row("fans", [
-            ("https://discord.com/invite/dQDDXyek9x", None),
-            ("https://www.instagram.com/hellocompcz", None),
-            ("https://www.facebook.com/HelloComp.cz", None),
-            ("https://www.hellocomp.cz/", None),
-        ])
-        page.layout().addWidget(tiles)
-        page.layout().addStretch()
-        return page
-
     def create_page_base(self, key):
         page = QWidget()
         page.setObjectName("Page")
 
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(50, 50, 50, 30)
-        layout.setSpacing(26)
+        layout.setContentsMargins(50, 30, 50, 18)
+        layout.setSpacing(15)
 
         title_label = QLabel()
         title_label.setObjectName("PageTitle")
@@ -739,6 +1089,24 @@ class HelloCompStart(QWidget):
 
         return wrapper
 
+    def load_pc_information(self):
+        t = TRANSLATIONS[self.language]
+
+        try:
+            info = get_pc_info(self.language)
+        except Exception as error:
+            info = {
+                key: "—"
+                for key in t["pc_fields"].keys()
+            }
+            info["manufacturer"] = "HelloComp"
+            info["cpu"] = str(error)
+
+        for key, card in self.pc_cards.items():
+            title = t["pc_fields"].get(key, key)
+            value = info.get(key, "—")
+            card.update_card(title, value)
+
     def update_language(self, language):
         self.language = language
         t = TRANSLATIONS[language]
@@ -746,26 +1114,33 @@ class HelloCompStart(QWidget):
         self.setWindowTitle(t["window_title"])
         self.header_title.setText(t["header_title"])
         self.header_subtitle.setText(t["header_subtitle"])
-        self.footer.setText(t["footer"])
+        self.footer_text.setText(t["footer"])
+        self.footer_social_title.setText(t["footer_social_title"])
+        self.refresh_pc_button.setText(t["my_pc_refresh"])
 
         for index, text in enumerate(t["menu"]):
             self.menu_buttons[index].setText(text)
 
         for btn in self.lang_buttons:
             btn.setChecked(btn.language == language)
+            btn.update()
 
-        page_keys = ["first_steps", "support", "software", "service", "fans"]
+        page_keys = ["my_pc", "first_steps", "support", "software", "service"]
 
         for key in page_keys:
             self.page_labels[key]["title"].setText(t[f"{key}_title"])
             self.page_labels[key]["text"].setText(t[f"{key}_text"])
 
-            tiles_texts = t[f"{key}_tiles"]
-            tiles = self.tile_groups[key]
+            if key in self.tile_groups:
+                tiles_texts = t[f"{key}_tiles"]
+                tiles = self.tile_groups[key]
 
-            for tile, (title, subtitle) in zip(tiles, tiles_texts):
-                tile.update_text(title, subtitle)
-                tile.set_language(language)
+                for tile, (title, subtitle) in zip(tiles, tiles_texts):
+                    tile.update_text(title, subtitle)
+                    tile.set_language(language)
+
+        for key, card in self.pc_cards.items():
+            card.title_label.setText(t["pc_fields"].get(key, key))
 
     def apply_styles(self):
         self.setStyleSheet(f"""
@@ -788,7 +1163,10 @@ class HelloCompStart(QWidget):
 
             #HeaderTextWrapper,
             #HeaderRightWrapper,
-            #LangRow {{
+            #LangRow,
+            #PcTopRow,
+            #PcGridWrapper,
+            #FooterSocial {{
                 background: transparent;
             }}
 
@@ -841,7 +1219,7 @@ class HelloCompStart(QWidget):
                 color: rgba(255,255,255,0.76);
                 border-right: 1px solid rgba(255,255,255,0.055);
                 border-bottom: 3px solid transparent;
-                font-size: 15px;
+                font-size: 14px;
                 font-weight: 400;
             }}
 
@@ -861,23 +1239,9 @@ class HelloCompStart(QWidget):
             }}
 
             LangButton {{
-                background: rgba(255,255,255,0.075);
-                border: 1px solid rgba(255,255,255,0.13);
-                border-radius: 8px;
-                color: rgba(255,255,255,0.74);
-                font-size: 12px;
-                font-weight: 400;
-            }}
-
-            LangButton:hover {{
-                background: rgba(255,255,255,0.13);
-                color: #ffffff;
-            }}
-
-            LangButton:checked {{
-                background: rgba(255,255,255,0.20);
-                border: 1px solid rgba(255,255,255,0.36);
-                color: #ffffff;
+                background: transparent;
+                border: none;
+                color: transparent;
             }}
 
             #Page {{
@@ -925,12 +1289,81 @@ class HelloCompStart(QWidget):
                 border: 1px solid rgba(255,255,255,0.22);
             }}
 
+            #PcInfoCard {{
+                background: rgba(255,255,255,0.070);
+                border: 1px solid rgba(255,255,255,0.115);
+                border-radius: 12px;
+            }}
+
+            #PcInfoTitle {{
+                background: transparent;
+                color: rgba(255,255,255,0.60);
+                font-size: 12px;
+                font-weight: 400;
+                letter-spacing: 0.02em;
+            }}
+
+            #PcInfoValue {{
+                background: transparent;
+                color: #ffffff;
+                font-size: 14px;
+                font-weight: 400;
+                line-height: 1.30;
+            }}
+
+            #RefreshPcButton {{
+                background: rgba(255,255,255,0.10);
+                border: 1px solid rgba(255,255,255,0.16);
+                border-radius: 10px;
+                padding: 0 18px;
+                color: #ffffff;
+                font-size: 13px;
+            }}
+
+            #RefreshPcButton:hover {{
+                background: rgba(255,255,255,0.17);
+                border: 1px solid rgba(255,255,255,0.26);
+            }}
+
             #Footer {{
-                background: #0b111d;
-                color: rgba(255,255,255,0.58);
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #f8fafc,
+                    stop:1 #eef3f9
+                );
+                border-top: 1px solid #e3e8ef;
+            }}
+
+            #FooterText {{
+                background: transparent;
+                color: #3f4652;
                 font-size: 13px;
                 font-weight: 400;
-                border-top: 1px solid rgba(255,255,255,0.06);
+            }}
+
+            #FooterSocialTitle {{
+                background: transparent;
+                color: #5f6f82;
+                font-size: 13px;
+                font-weight: 400;
+                letter-spacing: 0.02em;
+            }}
+
+            #FooterSocialButton {{
+                min-height: 34px;
+                padding: 6px 14px;
+                border-radius: 10px;
+                border: 1px solid rgba(36, 79, 136, 0.14);
+                background: rgba(255, 255, 255, 0.82);
+                color: #244f88;
+                font-size: 13px;
+                font-weight: 400;
+            }}
+
+            #FooterSocialButton:hover {{
+                background: #ffffff;
+                border: 1px solid rgba(36, 79, 136, 0.28);
+                color: #244f88;
             }}
         """)
 
@@ -938,7 +1371,7 @@ class HelloCompStart(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    if is_windows() and APP_ICON.exists():
+    if APP_ICON.exists():
         app.setWindowIcon(QIcon(str(APP_ICON)))
 
     window = HelloCompStart()
