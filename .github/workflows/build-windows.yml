@@ -57,6 +57,36 @@ jobs:
           name: HelloComp_Start_Windows_OneFile
           path: HelloComp_Start_Windows_OneFile.zip
 
+      - name: Initialize public update repository
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ secrets.UPDATE_REPO_TOKEN }}
+        run: |
+          $repo = "GettyCZ/hellocomp-start-updates"
+
+          echo "Checking if $repo is initialized..."
+
+          gh api "repos/$repo/contents/README.md" --silent
+          if ($LASTEXITCODE -eq 0) {
+            echo "Update repository already initialized."
+            exit 0
+          }
+
+          echo "README.md not found, creating initial file..."
+
+          $content = "# HelloComp Start Updates`n`nPublic update repository for HelloComp Start application releases."
+          $bytes = [System.Text.Encoding]::UTF8.GetBytes($content)
+          $base64 = [System.Convert]::ToBase64String($bytes)
+
+          $body = @{
+            message = "Initialize update repository"
+            content = $base64
+          } | ConvertTo-Json
+
+          $body | gh api "repos/$repo/contents/README.md" --method PUT --input -
+
+          echo "Update repository initialized."
+
       - name: Publish update release
         shell: powershell
         env:
