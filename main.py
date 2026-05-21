@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 
-APP_VERSION = "2.0-beta12"
+APP_VERSION = "2.0-beta13"
 
 APP_WIDTH = 1180
 APP_HEIGHT = 760
@@ -1033,35 +1033,75 @@ class LangButton(QPushButton):
 
         elif self.language == "sk":
             stripe = h // 3
+
             painter.setBrush(QColor("#ffffff"))
             painter.drawRect(x, y, w, stripe)
+
             painter.setBrush(QColor("#0b4ea2"))
             painter.drawRect(x, y + stripe, w, stripe)
+
             painter.setBrush(QColor("#ee1c25"))
             painter.drawRect(x, y + stripe * 2, w, h - stripe * 2)
 
+            # Malý slovenský znak, aby SK nevypadala jako ruská vlajka.
+            shield_x = x + 3
+            shield_y = y + 2
+            shield_w = 7
+            shield_h = h - 4
+
+            shield = QPolygon([
+                QPoint(shield_x, shield_y),
+                QPoint(shield_x + shield_w, shield_y),
+                QPoint(shield_x + shield_w, shield_y + int(shield_h * 0.58)),
+                QPoint(shield_x + int(shield_w * 0.5), shield_y + shield_h),
+                QPoint(shield_x, shield_y + int(shield_h * 0.58)),
+            ])
+
+            painter.setBrush(QColor("#ee1c25"))
+            painter.drawPolygon(shield)
+
+            painter.setPen(QPen(QColor("#ffffff"), 1))
+            cross_x = shield_x + int(shield_w * 0.5)
+            cross_y = shield_y + 2
+
+            painter.drawLine(cross_x, cross_y, cross_x, shield_y + shield_h - 2)
+            painter.drawLine(shield_x + 2, cross_y + 2, shield_x + shield_w - 2, cross_y + 2)
+            painter.drawLine(shield_x + 2, cross_y + 4, shield_x + shield_w - 2, cross_y + 4)
+            painter.setPen(Qt.NoPen)
+
         elif self.language == "hu":
             stripe = h // 3
+
             painter.setBrush(QColor("#ce2939"))
             painter.drawRect(x, y, w, stripe)
+
             painter.setBrush(QColor("#ffffff"))
             painter.drawRect(x, y + stripe, w, stripe)
+
             painter.setBrush(QColor("#477050"))
             painter.drawRect(x, y + stripe * 2, w, h - stripe * 2)
 
         elif self.language == "en":
-            painter.setBrush(QColor("#012169"))
-            painter.drawRect(x, y, w, h)
+            # USA vlajka – v malé ikoně je čitelnější než Union Jack.
+            stripe_count = 7
+            stripe_h = max(1, h // stripe_count)
+
+            for i in range(stripe_count):
+                painter.setBrush(QColor("#b22234") if i % 2 == 0 else QColor("#ffffff"))
+                painter.drawRect(x, y + i * stripe_h, w, stripe_h)
+
+            painter.setBrush(QColor("#3c3b6e"))
+            painter.drawRect(x, y, int(w * 0.48), int(h * 0.58))
+
             painter.setBrush(QColor("#ffffff"))
-            painter.drawRect(x, y + 5, w, 2)
-            painter.drawRect(x + 8, y, 2, h)
-            painter.setBrush(QColor("#c8102e"))
-            painter.drawRect(x, y + 5, w, 1)
-            painter.drawRect(x + 8, y, 1, h)
+            for row in range(3):
+                for col in range(3):
+                    painter.drawRect(x + 2 + col * 4, y + 2 + row * 3, 1, 1)
 
         elif self.language == "ua":
             painter.setBrush(QColor("#0057b7"))
             painter.drawRect(x, y, w, h // 2)
+
             painter.setBrush(QColor("#ffd700"))
             painter.drawRect(x, y + h // 2, w, h - h // 2)
 
@@ -2414,6 +2454,40 @@ endlocal
                 font-size: 12px;
                 font-weight: 400;
                 letter-spacing: 0.02em;
+            }}
+
+
+            QMessageBox {{
+                background-color: #f8fafc;
+                color: #20242d;
+                font-family: "{self.app_font}";
+                font-size: 14px;
+            }}
+
+            QMessageBox QLabel {{
+                background: transparent;
+                color: #20242d;
+                font-size: 14px;
+                font-weight: 400;
+                line-height: 1.35;
+            }}
+
+            QMessageBox QPushButton {{
+                min-width: 82px;
+                min-height: 32px;
+                padding: 6px 16px;
+                border-radius: 9px;
+                border: 1px solid rgba(36, 79, 136, 0.18);
+                background: #ffffff;
+                color: #244f88;
+                font-size: 13px;
+                font-weight: 400;
+            }}
+
+            QMessageBox QPushButton:hover {{
+                background: #eef3f9;
+                border: 1px solid rgba(36, 79, 136, 0.32);
+                color: #244f88;
             }}
 
             #FooterSocialButton {{
