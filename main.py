@@ -2140,7 +2140,8 @@ class HelloCompStart(QWidget):
         temp_dir = Path(tempfile.gettempdir()) / "HelloCompStartUpdate"
         temp_dir.mkdir(parents=True, exist_ok=True)
 
-        new_exe = temp_dir / f"HelloComp_Start_{latest_version}.exe"
+        safe_version = str(latest_version).replace("/", "-").replace("\\", "-").replace(" ", "_")
+        new_exe = temp_dir / f"HelloComp_Start_{safe_version}.exe"
         updater_bat = temp_dir / "update_hellocomp_start.bat"
 
         current_exe = Path(sys.executable).resolve()
@@ -2151,32 +2152,52 @@ class HelloCompStart(QWidget):
             raise RuntimeError("Stažená aktualizace je příliš malá nebo poškozená.")
 
         bat_content = f"""@echo off
-setlocal
+setlocal EnableExtensions
+
 set "OLD_EXE={current_exe}"
 set "NEW_EXE={new_exe}"
 
-timeout /t 2 /nobreak >nul
+rem Počkáme, než se původní aplikace opravdu ukončí.
+timeout /t 5 /nobreak >nul
+
+rem Stabilnější kopírování nové verze přes starou.
+set RETRY=0
 
 :copyloop
+set /a RETRY+=1
 copy /Y "%NEW_EXE%" "%OLD_EXE%" >nul
+
 if errorlevel 1 (
+    if %RETRY% GEQ 20 goto copyfailed
     timeout /t 1 /nobreak >nul
     goto copyloop
 )
 
+rem Důležité: po kopírování ještě chvíli počkáme.
+rem Některé antiviry / Windows Defender po stažení kontrolují EXE a PyInstaller DLL.
+timeout /t 8 /nobreak >nul
+
+rem Spuštění aktualizované aplikace.
 start "" "%OLD_EXE%"
 
-timeout /t 2 /nobreak >nul
+rem Úklid až po delší pauze, aby se nový EXE stihl korektně rozbalit.
+timeout /t 8 /nobreak >nul
 del "%NEW_EXE%" >nul 2>nul
 del "%~f0" >nul 2>nul
 endlocal
+exit /b 0
+
+:copyfailed
+start "" "%OLD_EXE%"
+endlocal
+exit /b 1
 """
 
         updater_bat.write_text(bat_content, encoding="utf-8")
 
         subprocess.Popen(
             ["cmd", "/c", str(updater_bat)],
-            creationflags=subprocess.CREATE_NEW_CONSOLE if hasattr(subprocess, "CREATE_NEW_CONSOLE") else 0,
+            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, "CREATE_NO_WINDOW") else 0,
         )
 
         QApplication.quit()
