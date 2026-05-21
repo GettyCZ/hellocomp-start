@@ -1,6 +1,6 @@
 {
-  "version": "2.1-beta1",
+  "version": "2.1-beta2",
   "windows_exe_url": "https://github.com/GettyCZ/hellocomp-start/releases/latest/download/HelloComp_Start.exe",
   "release_url": "https://github.com/GettyCZ/hellocomp-start/releases/latest",
-  "notes": "Vylepšené spuštění Windows Update a vyhledávání aktualizací systému."
+  "notes": "Stabilnější Windows build aplikace HelloComp Start."
 }

@@ -37,10 +37,12 @@ jobs:
       - name: Build single EXE with PyInstaller
         shell: cmd
         run: |
-          pyinstaller --noconfirm --windowed --onefile ^
+          pyinstaller --noconfirm --clean --noupx --windowed --onefile ^
             --name "HelloComp_Start" ^
             --icon "assets\hellocomp_icon.ico" ^
             --add-data "assets;assets" ^
+            --collect-all PySide6 ^
+            --collect-all shiboken6 ^
             main.py
 
       - name: Create ZIP package
@@ -68,7 +70,7 @@ jobs:
           $tag = "v$env:APP_VERSION"
           $repo = "${{ github.repository }}"
           $title = "HelloComp Start $env:APP_VERSION"
-          $notes = "Automatická aktualizace aplikace HelloComp Start."
+          $notes = "Stabilnější Windows build aplikace HelloComp Start."
 
           echo "Publishing release $tag to $repo"
 

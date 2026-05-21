@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 
-APP_VERSION = "2.1-beta1"
+APP_VERSION = "2.1-beta2"
 
 APP_WIDTH = 1180
 APP_HEIGHT = 760
