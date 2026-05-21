@@ -971,7 +971,7 @@ class LangButton(QPushButton):
         self.setCursor(Qt.PointingHandCursor)
         self.setCheckable(True)
         self.setFixedHeight(31)
-        self.setFixedWidth(74)
+        self.setFixedWidth(82)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -997,16 +997,16 @@ class LangButton(QPushButton):
         painter.drawRoundedRect(rect, 8, 8)
 
         flag_x = 10
-        flag_y = int((self.height() - 12) / 2)
-        flag_w = 18
-        flag_h = 12
+        flag_w = 24
+        flag_h = 15
+        flag_y = int((self.height() - flag_h) / 2)
 
         self.draw_flag(painter, flag_x, flag_y, flag_w, flag_h)
 
         painter.setPen(text_color)
         painter.setFont(self.font())
         painter.drawText(
-            QRectF(36, 0, self.width() - 40, self.height()),
+            QRectF(42, 0, self.width() - 46, self.height()),
             Qt.AlignVCenter | Qt.AlignLeft,
             self.text()
         )
@@ -1034,6 +1034,7 @@ class LangButton(QPushButton):
         elif self.language == "sk":
             stripe = h // 3
 
+            # Slovensko: bílá / modrá / červená + malý znak vlevo.
             painter.setBrush(QColor("#ffffff"))
             painter.drawRect(x, y, w, stripe)
 
@@ -1043,31 +1044,35 @@ class LangButton(QPushButton):
             painter.setBrush(QColor("#ee1c25"))
             painter.drawRect(x, y + stripe * 2, w, h - stripe * 2)
 
-            # Malý slovenský znak, aby SK nevypadala jako ruská vlajka.
+            # Jednoduchý slovenský štít – decentní, aby v malé velikosti nepůsobil rozbitě.
             shield_x = x + 3
             shield_y = y + 2
-            shield_w = 7
+            shield_w = 8
             shield_h = h - 4
 
             shield = QPolygon([
                 QPoint(shield_x, shield_y),
                 QPoint(shield_x + shield_w, shield_y),
-                QPoint(shield_x + shield_w, shield_y + int(shield_h * 0.58)),
-                QPoint(shield_x + int(shield_w * 0.5), shield_y + shield_h),
-                QPoint(shield_x, shield_y + int(shield_h * 0.58)),
+                QPoint(shield_x + shield_w, shield_y + int(shield_h * 0.62)),
+                QPoint(shield_x + int(shield_w * 0.50), shield_y + shield_h),
+                QPoint(shield_x, shield_y + int(shield_h * 0.62)),
             ])
 
             painter.setBrush(QColor("#ee1c25"))
             painter.drawPolygon(shield)
 
+            # Bílé dvojramenné křížení
             painter.setPen(QPen(QColor("#ffffff"), 1))
-            cross_x = shield_x + int(shield_w * 0.5)
-            cross_y = shield_y + 2
+            cx = shield_x + shield_w // 2
+            top = shield_y + 2
+            painter.drawLine(cx, top, cx, shield_y + shield_h - 3)
+            painter.drawLine(shield_x + 2, top + 2, shield_x + shield_w - 2, top + 2)
+            painter.drawLine(shield_x + 2, top + 4, shield_x + shield_w - 2, top + 4)
 
-            painter.drawLine(cross_x, cross_y, cross_x, shield_y + shield_h - 2)
-            painter.drawLine(shield_x + 2, cross_y + 2, shield_x + shield_w - 2, cross_y + 2)
-            painter.drawLine(shield_x + 2, cross_y + 4, shield_x + shield_w - 2, cross_y + 4)
+            # Modrá spodní část štítu
             painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor("#0b4ea2"))
+            painter.drawRect(shield_x + 1, shield_y + shield_h - 3, shield_w - 2, 2)
 
         elif self.language == "hu":
             stripe = h // 3
@@ -1082,7 +1087,7 @@ class LangButton(QPushButton):
             painter.drawRect(x, y + stripe * 2, w, h - stripe * 2)
 
         elif self.language == "en":
-            # USA vlajka – v malé ikoně je čitelnější než Union Jack.
+            # USA vlajka – čisté pruhy + modré pole se světlými body.
             stripe_count = 7
             stripe_h = max(1, h // stripe_count)
 
@@ -1090,13 +1095,21 @@ class LangButton(QPushButton):
                 painter.setBrush(QColor("#b22234") if i % 2 == 0 else QColor("#ffffff"))
                 painter.drawRect(x, y + i * stripe_h, w, stripe_h)
 
+            canton_w = int(w * 0.46)
+            canton_h = int(h * 0.58)
+
             painter.setBrush(QColor("#3c3b6e"))
-            painter.drawRect(x, y, int(w * 0.48), int(h * 0.58))
+            painter.drawRect(x, y, canton_w, canton_h)
 
             painter.setBrush(QColor("#ffffff"))
-            for row in range(3):
-                for col in range(3):
-                    painter.drawRect(x + 2 + col * 4, y + 2 + row * 3, 1, 1)
+            star_points = [
+                (2, 2), (5, 2), (8, 2),
+                (3, 5), (6, 5), (9, 5),
+            ]
+
+            for sx, sy in star_points:
+                if sx < canton_w - 1 and sy < canton_h - 1:
+                    painter.drawRect(x + sx, y + sy, 1, 1)
 
         elif self.language == "ua":
             painter.setBrush(QColor("#0057b7"))
