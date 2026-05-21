@@ -24,6 +24,13 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
 
+      - name: Read app version
+        shell: powershell
+        run: |
+          $json = Get-Content version.json -Raw | ConvertFrom-Json
+          "APP_VERSION=$($json.version)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "App version: $($json.version)"
+
       - name: Build single EXE with PyInstaller
         shell: cmd
         run: |
@@ -49,3 +56,24 @@ jobs:
         with:
           name: HelloComp_Start_Windows_OneFile
           path: HelloComp_Start_Windows_OneFile.zip
+
+      - name: Publish update release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ secrets.UPDATE_REPO_TOKEN }}
+        run: |
+          $tag = "v$env:APP_VERSION"
+          $repo = "GettyCZ/hellocomp-start-updates"
+          $title = "HelloComp Start $env:APP_VERSION"
+          $notes = "Automatická aktualizace aplikace HelloComp Start."
+
+          echo "Publishing update release $tag to $repo"
+
+          gh release view $tag --repo $repo
+          if ($LASTEXITCODE -eq 0) {
+            echo "Release exists, uploading assets with clobber..."
+            gh release upload $tag "dist\HelloComp_Start.exe" "version.json" --repo $repo --clobber
+          } else {
+            echo "Release does not exist, creating..."
+            gh release create $tag "dist\HelloComp_Start.exe" "version.json" --repo $repo --title $title --notes $notes
+          }
