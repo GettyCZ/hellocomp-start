@@ -8,7 +8,7 @@ import urllib.request
 import webbrowser
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QRectF, QPoint
+from PySide6.QtCore import Qt, QRectF, QPoint, QTimer
 from PySide6.QtGui import (
     QFontDatabase,
     QPixmap,
@@ -17,6 +17,8 @@ from PySide6.QtGui import (
     QColor,
     QPen,
     QPolygon,
+    QFont,
+    QLinearGradient,
 )
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
@@ -33,7 +35,7 @@ from PySide6.QtWidgets import (
 )
 
 
-APP_VERSION = "1.10"
+APP_VERSION = "2.0-beta10"
 
 APP_WIDTH = 1180
 APP_HEIGHT = 760
@@ -62,6 +64,15 @@ FONT_CANDIDATES = [
     ASSETS_DIR / "hellocomp_font.otf",
 ]
 
+FA_BRANDS_CANDIDATES = [
+    ASSETS_DIR / "fa-brands-400.ttf",
+    ASSETS_DIR / "fa-brands-400.otf",
+    ASSETS_DIR / "Font Awesome 6 Brands-Regular-400.otf",
+    ASSETS_DIR / "Font Awesome 6 Brands-Regular-400.ttf",
+    ASSETS_DIR / "Font Awesome 5 Brands-Regular-400.otf",
+    ASSETS_DIR / "Font Awesome 5 Brands-Regular-400.ttf",
+]
+
 
 SOFTWARE_INSTALLERS = {
     "steam": {
@@ -69,15 +80,29 @@ SOFTWARE_INSTALLERS = {
         "url": "https://cdn.cloudflare.steamstatic.com/client/installer/SteamSetup.exe",
         "filename": "SteamSetup.exe",
         "fallback_url": "https://store.steampowered.com/about/",
-        "exe_names": ["steam.exe"],
     },
     "discord": {
         "name": "Discord",
         "url": "https://discord.com/api/download?platform=win",
         "filename": "DiscordSetup.exe",
         "fallback_url": "https://discord.com/download",
-        "exe_names": ["Discord.exe", "Update.exe"],
     },
+}
+
+
+SOFTWARE_URLS = {
+    "nvidia": "https://www.nvidia.com/en-us/software/nvidia-app/",
+    "amd": "https://www.amd.com/en/products/software/adrenalin.html",
+    "intel": "https://www.intel.com/content/www/us/en/download/785597/intel-arc-graphics-windows.html",
+    "epic": "https://store.epicgames.com/download",
+    "occt": "https://www.ocbase.com/",
+}
+
+
+DRIVER_NAMES = {
+    "nvidia": "nVidia App",
+    "amd": "AMD Adrenalin",
+    "intel": "Intel Graphics",
 }
 
 
@@ -86,23 +111,29 @@ TRANSLATIONS = {
         "lang_label": "CZ",
         "window_title": "HelloComp Start",
         "header_title": "Můj počítač HelloComp",
-        "header_subtitle": "První spuštění, podpora, servis a doporučený software",
+        "header_subtitle": "Rychlý start, doporučené aplikace, podpora a servis na jednom místě.",
         "footer": f"HelloComp.cz © 2026  |  verze {APP_VERSION}",
         "footer_social_title": "Sledujte nás",
+        "recommended_badge": "Doporučeno pro tento PC",
+
+        "wrong_driver_title": "Tento ovladač není doporučený",
+        "wrong_driver_text": "Aplikace detekovala grafickou kartu {detected}. Pro tento počítač je doporučený ovladač {recommended}.\n\nChcete i přesto otevřít stránku {selected}?",
+        "gpu_unknown_title": "Grafická karta nebyla jednoznačně rozpoznána",
+        "gpu_unknown_text": "Aplikace nedokázala jednoznačně určit výrobce grafické karty. Otevřete pouze ovladač, který odpovídá vaší grafické kartě.",
 
         "menu": [
             "Můj počítač",
             "První kroky",
-            "Potřebuji podporu",
-            "Volitelný software",
-            "Potřebuji servis",
+            "Podpora",
+            "Aplikace",
+            "Servis",
         ],
 
         "my_pc_title": "Můj počítač",
-        "my_pc_text": "Přehled hlavních informací o této sestavě.",
-        "my_pc_refresh": "Načíst informace znovu",
+        "my_pc_text": "Přehled hlavních parametrů sestavy. Detailní hardwarové údaje se načtou automaticky ve Windows.",
+        "my_pc_refresh": "Načíst znovu",
+        "my_pc_loading": "Načítám…",
         "my_pc_windows_only": "Detailní informace se automaticky načtou ve Windows verzi aplikace.",
-        "my_pc_loading_error": "Informace se nepodařilo načíst.",
 
         "pc_fields": {
             "manufacturer": "Výrobce",
@@ -113,45 +144,45 @@ TRANSLATIONS = {
             "baseboard": "Základní deska",
         },
 
-        "first_steps_title": "První kroky s novým počítačem",
-        "first_steps_text": "Pro váš nový počítač jsme připravili základní návody a doporučení.",
+        "first_steps_title": "První kroky",
+        "first_steps_text": "Doporučené kroky po prvním spuštění počítače.",
         "first_steps_tiles": [
-            ("Návod k použití počítače", "Základní informace po prvním spuštění"),
-            ("Aktivace Windows", "Jak ověřit aktivaci systému Windows"),
-            ("Doporučené nastavení", "Tipy pro stabilní a plynulý provoz"),
+            ("📘 Návod k použití", "Základní informace po prvním spuštění"),
+            ("🪟 Aktivace Windows", "Ověření aktivace systému Windows"),
+            ("⚙️ Doporučené nastavení", "Tipy pro stabilní provoz"),
         ],
 
-        "support_title": "Potřebuji podporu",
-        "support_text": "Jsme tu pro vás, pokud potřebujete poradit s počítačem, objednávkou nebo nastavením.",
+        "support_title": "Podpora HelloComp",
+        "support_text": "Rychlá pomoc, kontakt a odpovědi na nejčastější dotazy.",
         "support_tiles": [
-            ("Kontaktovat podporu", "Otevřít kontaktní stránku HelloComp"),
-            ("Napsat e-mail", "Rychlý kontakt na podporu"),
-            ("Časté otázky", "Odpovědi na běžné dotazy"),
+            ("☎️ Kontakt", "Otevřít kontaktní stránku HelloComp"),
+            ("✉️ Napsat e-mail", "info@hellocomp.cz"),
+            ("❔ Časté otázky", "FAQ a odpovědi na běžné dotazy"),
         ],
 
-        "software_title": "Volitelný software",
-        "software_text": "Vyberte si software, který se vám může hodit pro hraní, práci i správu počítače.",
+        "software_title": "Doporučené aplikace",
+        "software_text": "Aplikace pro hraní, komunikaci, ovladače, správu počítače a základní test stability.",
         "software_tiles": [
-            ("Instalovat Steam", "Stáhnout a spustit oficiální instalátor"),
-            ("Instalovat Discord", "Stáhnout a spustit oficiální instalátor"),
-            ("NVIDIA App", "Ovladače a nástroje pro nVidia grafiky"),
-            ("AMD Adrenalin", "Ovladače a nástroje pro AMD grafiky"),
-            ("Epic Games Launcher", "Otevřít oficiální stránku pro stažení"),
+            ("🎮 Steam", "Stáhnout a spustit instalátor"),
+            ("💬 Discord", "Stáhnout a spustit instalátor"),
+            ("🕹️ Epic Games", "Otevřít stránku ke stažení"),
+            ("🧪 OCCT", "Test stability CPU, GPU, RAM a zdroje"),
+            ("🟢 nVidia App", "Oficiální aplikace a ovladače nVidia"),
+            ("🔴 AMD Adrenalin", "Oficiální aplikace a ovladače AMD"),
+            ("🔵 Intel Graphics", "Ovladače pro Intel ARC / Iris Xe"),
+            ("🔄 Windows Update", "Spustit vyhledání aktualizací systému"),
         ],
 
         "service_title": "Servis a reklamace",
-        "service_text": "Potřebujete servis, údržbu nebo řešit reklamaci? Tady najdete potřebné odkazy.",
+        "service_text": "Rychlé odkazy pro servis, reklamaci nebo bezpečné odeslání počítače.",
         "service_tiles": [
-            ("Reklamace", "Informace k reklamaci zboží"),
-            ("Servis počítače", "Pomoc s opravou nebo údržbou"),
-            ("Bezpečné odeslání PC", "Jak správně zabalit počítač"),
+            ("🧾 Reklamace", "Informace k reklamaci zboží"),
+            ("🛠️ Servis počítače", "Pomoc s opravou nebo údržbou"),
+            ("📦 Bezpečné odeslání PC", "Jak správně zabalit počítač"),
         ],
 
-        "install_only_windows": "Přímá instalace je dostupná ve Windows.\n\nNa tomto systému otevřu stránku pro stažení: {name}.",
-        "installer_missing": "Instalátor nebyl nalezen.",
         "already_installed_title": "{name} je již nainstalovaný",
-        "already_installed_text": "Aplikace {name} je už v počítači nainstalovaná.\n\nUmístění:\n{path}",
-        "already_installed_no_path": "Aplikace {name} je už v počítači nainstalovaná.",
+        "already_installed_text": "Aplikace {name} je už v počítači nainstalovaná.",
         "install_title": "Instalovat {name}",
         "install_question": "Aplikace stáhne oficiální instalátor {name} a spustí ho.\n\nPokračovat?",
         "download_title": "Stahuji {name}",
@@ -164,23 +195,29 @@ TRANSLATIONS = {
         "lang_label": "SK",
         "window_title": "HelloComp Start",
         "header_title": "Môj počítač HelloComp",
-        "header_subtitle": "Prvé spustenie, podpora, servis a odporúčaný softvér",
+        "header_subtitle": "Rýchly štart, odporúčané aplikácie, podpora a servis na jednom mieste.",
         "footer": f"HelloComp.cz © 2026  |  verzia {APP_VERSION}",
         "footer_social_title": "Sledujte nás",
+        "recommended_badge": "Odporúčané pre tento PC",
+
+        "wrong_driver_title": "Tento ovládač nie je odporúčaný",
+        "wrong_driver_text": "Aplikácia detegovala grafickú kartu {detected}. Pre tento počítač je odporúčaný ovládač {recommended}.\n\nChcete aj napriek tomu otvoriť stránku {selected}?",
+        "gpu_unknown_title": "Grafická karta nebola jednoznačne rozpoznaná",
+        "gpu_unknown_text": "Aplikácia nedokázala jednoznačne určiť výrobcu grafickej karty. Otvorte iba ovládač, ktorý zodpovedá vašej grafickej karte.",
 
         "menu": [
             "Môj počítač",
             "Prvé kroky",
-            "Potrebujem podporu",
-            "Voliteľný softvér",
-            "Potrebujem servis",
+            "Podpora",
+            "Aplikácie",
+            "Servis",
         ],
 
         "my_pc_title": "Môj počítač",
-        "my_pc_text": "Prehľad hlavných informácií o tejto zostave.",
-        "my_pc_refresh": "Načítať informácie znova",
+        "my_pc_text": "Prehľad hlavných parametrov zostavy. Detailné hardvérové údaje sa načítajú automaticky vo Windows.",
+        "my_pc_refresh": "Načítať znova",
+        "my_pc_loading": "Načítavam…",
         "my_pc_windows_only": "Detailné informácie sa automaticky načítajú vo Windows verzii aplikácie.",
-        "my_pc_loading_error": "Informácie sa nepodarilo načítať.",
 
         "pc_fields": {
             "manufacturer": "Výrobca",
@@ -191,45 +228,45 @@ TRANSLATIONS = {
             "baseboard": "Základná doska",
         },
 
-        "first_steps_title": "Prvé kroky s novým počítačom",
-        "first_steps_text": "Pre váš nový počítač sme pripravili základné návody a odporúčania.",
+        "first_steps_title": "Prvé kroky",
+        "first_steps_text": "Odporúčané kroky po prvom spustení počítača.",
         "first_steps_tiles": [
-            ("Návod na používanie počítača", "Základné informácie po prvom spustení"),
-            ("Aktivácia Windows", "Ako overiť aktiváciu systému Windows"),
-            ("Odporúčané nastavenia", "Tipy pre stabilnú a plynulú prevádzku"),
+            ("📘 Návod na používanie", "Základné informácie po prvom spustení"),
+            ("🪟 Aktivácia Windows", "Overenie aktivácie systému Windows"),
+            ("⚙️ Odporúčané nastavenia", "Tipy pre stabilnú prevádzku"),
         ],
 
-        "support_title": "Potrebujem podporu",
-        "support_text": "Sme tu pre vás, ak potrebujete poradiť s počítačom, objednávkou alebo nastavením.",
+        "support_title": "Podpora HelloComp",
+        "support_text": "Rýchla pomoc, kontakt a odpovede na najčastejšie otázky.",
         "support_tiles": [
-            ("Kontaktovať podporu", "Otvoriť kontaktnú stránku HelloComp"),
-            ("Napísať e-mail", "Rýchly kontakt na podporu"),
-            ("Časté otázky", "Odpovede na bežné otázky"),
+            ("☎️ Kontakt", "Otvoriť kontaktnú stránku HelloComp"),
+            ("✉️ Napísať e-mail", "info@hellocomp.cz"),
+            ("❔ Časté otázky", "FAQ a odpovede na bežné otázky"),
         ],
 
-        "software_title": "Voliteľný softvér",
-        "software_text": "Vyberte si softvér, ktorý sa vám môže hodiť na hranie, prácu aj správu počítača.",
+        "software_title": "Odporúčané aplikácie",
+        "software_text": "Aplikácie na hranie, komunikáciu, ovládače, správu počítača a základný test stability.",
         "software_tiles": [
-            ("Inštalovať Steam", "Stiahnuť a spustiť oficiálny inštalátor"),
-            ("Inštalovať Discord", "Stiahnuť a spustiť oficiálny inštalátor"),
-            ("NVIDIA App", "Ovládače a nástroje pre nVidia grafiky"),
-            ("AMD Adrenalin", "Ovládače a nástroje pre AMD grafiky"),
-            ("Epic Games Launcher", "Otvoriť oficiálnu stránku na stiahnutie"),
+            ("🎮 Steam", "Stiahnuť a spustiť inštalátor"),
+            ("💬 Discord", "Stiahnuť a spustiť inštalátor"),
+            ("🕹️ Epic Games", "Otvoriť stránku na stiahnutie"),
+            ("🧪 OCCT", "Test stability CPU, GPU, RAM a zdroja"),
+            ("🟢 nVidia App", "Oficiálna aplikácia a ovládače nVidia"),
+            ("🔴 AMD Adrenalin", "Oficiálna aplikácia a ovládače AMD"),
+            ("🔵 Intel Graphics", "Ovládače pre Intel ARC / Iris Xe"),
+            ("🔄 Windows Update", "Spustiť vyhľadanie aktualizácií systému"),
         ],
 
         "service_title": "Servis a reklamácie",
-        "service_text": "Potrebujete servis, údržbu alebo riešiť reklamáciu? Tu nájdete potrebné odkazy.",
+        "service_text": "Rýchle odkazy pre servis, reklamáciu alebo bezpečné odoslanie počítača.",
         "service_tiles": [
-            ("Reklamácie", "Informácie k reklamácii tovaru"),
-            ("Servis počítača", "Pomoc s opravou alebo údržbou"),
-            ("Bezpečné odoslanie PC", "Ako správne zabaliť počítač"),
+            ("🧾 Reklamácie", "Informácie k reklamácii tovaru"),
+            ("🛠️ Servis počítača", "Pomoc s opravou alebo údržbou"),
+            ("📦 Bezpečné odoslanie PC", "Ako správne zabaliť počítač"),
         ],
 
-        "install_only_windows": "Priama inštalácia je dostupná vo Windows.\n\nNa tomto systéme otvorím stránku na stiahnutie: {name}.",
-        "installer_missing": "Inštalátor nebol nájdený.",
         "already_installed_title": "{name} je už nainštalovaný",
-        "already_installed_text": "Aplikácia {name} je už v počítači nainštalovaná.\n\nUmiestnenie:\n{path}",
-        "already_installed_no_path": "Aplikácia {name} je už v počítači nainštalovaná.",
+        "already_installed_text": "Aplikácia {name} je už v počítači nainštalovaná.",
         "install_title": "Inštalovať {name}",
         "install_question": "Aplikácia stiahne oficiálny inštalátor {name} a spustí ho.\n\nPokračovať?",
         "download_title": "Sťahujem {name}",
@@ -242,23 +279,29 @@ TRANSLATIONS = {
         "lang_label": "HU",
         "window_title": "HelloComp Start",
         "header_title": "Saját HelloComp számítógépem",
-        "header_subtitle": "Első indítás, támogatás, szerviz és ajánlott szoftverek",
+        "header_subtitle": "Gyors kezdés, ajánlott alkalmazások, támogatás és szerviz egy helyen.",
         "footer": f"HelloComp.cz © 2026  |  verzió {APP_VERSION}",
         "footer_social_title": "Kövessen minket",
+        "recommended_badge": "Ajánlott ehhez a PC-hez",
+
+        "wrong_driver_title": "Ez az illesztőprogram nem ajánlott",
+        "wrong_driver_text": "Az alkalmazás {detected} grafikus kártyát észlelt. Ehhez a számítógéphez a(z) {recommended} ajánlott.\n\nEnnek ellenére megnyitja a(z) {selected} oldalt?",
+        "gpu_unknown_title": "A grafikus kártya nem azonosítható egyértelműen",
+        "gpu_unknown_text": "Az alkalmazás nem tudta egyértelműen meghatározni a grafikus kártya gyártóját. Csak a saját grafikus kártyájának megfelelő illesztőprogramot nyissa meg.",
 
         "menu": [
             "Saját gépem",
             "Első lépések",
-            "Támogatásra van szükségem",
-            "Választható szoftverek",
-            "Szervizre van szükségem",
+            "Támogatás",
+            "Alkalmazások",
+            "Szerviz",
         ],
 
         "my_pc_title": "Saját gépem",
-        "my_pc_text": "A számítógép fő adatainak áttekintése.",
-        "my_pc_refresh": "Információk újratöltése",
+        "my_pc_text": "A számítógép fő paramétereinek áttekintése. A részletes hardveradatok Windows alatt automatikusan betöltődnek.",
+        "my_pc_refresh": "Újratöltés",
+        "my_pc_loading": "Betöltés…",
         "my_pc_windows_only": "A részletes információk automatikusan betöltődnek a Windows verzióban.",
-        "my_pc_loading_error": "Az információkat nem sikerült betölteni.",
 
         "pc_fields": {
             "manufacturer": "Gyártó",
@@ -269,51 +312,70 @@ TRANSLATIONS = {
             "baseboard": "Alaplap",
         },
 
-        "first_steps_title": "Első lépések az új számítógéppel",
-        "first_steps_text": "Az új számítógépéhez alapvető útmutatókat és ajánlásokat készítettünk.",
+        "first_steps_title": "Első lépések",
+        "first_steps_text": "Ajánlott lépések a számítógép első indítása után.",
         "first_steps_tiles": [
-            ("Számítógép használati útmutató", "Alapvető információk az első indítás után"),
-            ("Windows aktiválása", "A Windows aktiválásának ellenőrzése"),
-            ("Ajánlott beállítások", "Tippek a stabil és gördülékeny működéshez"),
+            ("📘 Használati útmutató", "Alapvető információk az első indítás után"),
+            ("🪟 Windows aktiválása", "A Windows aktiválásának ellenőrzése"),
+            ("⚙️ Ajánlott beállítások", "Tippek a stabil működéshez"),
         ],
 
-        "support_title": "Támogatásra van szükségem",
-        "support_text": "Segítünk, ha tanácsra van szüksége a számítógéppel, a rendeléssel vagy a beállításokkal kapcsolatban.",
+        "support_title": "HelloComp támogatás",
+        "support_text": "Gyors segítség, kapcsolat és válaszok a gyakori kérdésekre.",
         "support_tiles": [
-            ("Támogatás felkeresése", "A HelloComp kapcsolat oldalának megnyitása"),
-            ("E-mail írása", "Gyors kapcsolat a támogatással"),
-            ("Gyakori kérdések", "Válaszok a gyakori kérdésekre"),
+            ("☎️ Kapcsolat", "HelloComp kapcsolat oldal megnyitása"),
+            ("✉️ E-mail írása", "info@hellocomp.cz"),
+            ("❔ Gyakori kérdések", "GYIK és válaszok a gyakori kérdésekre"),
         ],
 
-        "software_title": "Választható szoftverek",
-        "software_text": "Válassza ki azokat a szoftvereket, amelyek hasznosak lehetnek játékhoz, munkához és a számítógép kezeléséhez.",
+        "software_title": "Ajánlott alkalmazások",
+        "software_text": "Alkalmazások játékhoz, kommunikációhoz, illesztőprogramokhoz, PC-kezeléshez és stabilitásteszthez.",
         "software_tiles": [
-            ("Steam telepítése", "Hivatalos telepítő letöltése és indítása"),
-            ("Discord telepítése", "Hivatalos telepítő letöltése és indítása"),
-            ("NVIDIA App", "Illesztőprogramok és eszközök nVidia grafikus kártyákhoz"),
-            ("AMD Adrenalin", "Illesztőprogramok és eszközök AMD grafikus kártyákhoz"),
-            ("Epic Games Launcher", "A hivatalos letöltési oldal megnyitása"),
+            ("🎮 Steam", "Telepítő letöltése és indítása"),
+            ("💬 Discord", "Telepítő letöltése és indítása"),
+            ("🕹️ Epic Games", "Letöltési oldal megnyitása"),
+            ("🧪 OCCT", "CPU, GPU, RAM és tápegység stabilitásteszt"),
+            ("🟢 nVidia App", "Hivatalos nVidia alkalmazás és illesztőprogramok"),
+            ("🔴 AMD Adrenalin", "Hivatalos AMD alkalmazás és illesztőprogramok"),
+            ("🔵 Intel Graphics", "Intel ARC / Iris Xe illesztőprogramok"),
+            ("🔄 Windows Update", "Rendszerfrissítések keresésének indítása"),
         ],
 
         "service_title": "Szerviz és reklamáció",
-        "service_text": "Szervizre, karbantartásra vagy reklamációra van szüksége? Itt megtalálja a szükséges hivatkozásokat.",
+        "service_text": "Gyors hivatkozások szervizhez, reklamációhoz vagy biztonságos PC küldéshez.",
         "service_tiles": [
-            ("Reklamáció", "Információk a termék reklamációjához"),
-            ("Számítógép szerviz", "Segítség javításhoz vagy karbantartáshoz"),
-            ("PC biztonságos küldése", "Hogyan csomagolja be helyesen a számítógépet"),
+            ("🧾 Reklamáció", "Információk a reklamációhoz"),
+            ("🛠️ Számítógép szerviz", "Segítség javításhoz vagy karbantartáshoz"),
+            ("📦 PC biztonságos küldése", "Hogyan csomagolja be helyesen"),
         ],
 
-        "install_only_windows": "A közvetlen telepítés Windows alatt érhető el.\n\nEzen a rendszeren megnyitom a letöltési oldalt: {name}.",
-        "installer_missing": "A telepítő nem található.",
         "already_installed_title": "A(z) {name} már telepítve van",
-        "already_installed_text": "A(z) {name} alkalmazás már telepítve van a számítógépen.\n\nHely:\n{path}",
-        "already_installed_no_path": "A(z) {name} alkalmazás már telepítve van a számítógépen.",
+        "already_installed_text": "A(z) {name} alkalmazás már telepítve van a számítógépen.",
         "install_title": "{name} telepítése",
         "install_question": "Az alkalmazás letölti és elindítja a(z) {name} hivatalos telepítőjét.\n\nFolytatja?",
         "download_title": "{name} letöltése",
         "download_text": "A(z) {name} telepítője letöltődik.\nA letöltés után automatikusan elindul.",
         "install_error_title": "{name} telepítése",
         "install_error_text": "A telepítőt nem sikerült letölteni vagy elindítani.\n\nMegnyitom a hivatalos letöltési oldalt.\n\nHiba:\n{error}",
+    },
+}
+
+
+LANGUAGE_URLS = {
+    "cz": {
+        "contact": "https://www.hellocomp.cz/kontakt/",
+        "faq": "https://www.hellocomp.cz/casto-kladene-otazky--faq/",
+        "home": "https://www.hellocomp.cz/",
+    },
+    "sk": {
+        "contact": "https://www.hellocomp.cz/sk/kontakt/",
+        "faq": "https://www.hellocomp.cz/sk/casto-kladene-otazky--faq/",
+        "home": "https://www.hellocomp.cz/sk/",
+    },
+    "hu": {
+        "contact": "https://www.hellocomp.cz/hu/kapcsolat/",
+        "faq": "https://www.hellocomp.cz/hu/gyakran-ismetelt-kerdesek--gyik/",
+        "home": "https://www.hellocomp.cz/hu/",
     },
 }
 
@@ -337,13 +399,32 @@ def load_app_font():
                 print(f"✅ Font family: {families[0]}")
                 return families[0]
 
-        print(f"⚠️ Font existuje, ale nepodařilo se ho načíst: {font_path}")
-    else:
-        print("⚠️ Font nenalezen. Hledám zde:")
-        for path in FONT_CANDIDATES:
-            print(f" - {path}")
-
+    print("⚠️ Font nenalezen nebo se nepodařil načíst.")
     return "Arial"
+
+
+def load_font_family_from_candidates(paths, label):
+    font_path = find_first_existing(paths)
+
+    if not font_path:
+        print(f"⚠️ {label} font nenalezen.")
+        return None
+
+    font_id = QFontDatabase.addApplicationFont(str(font_path))
+
+    if font_id == -1:
+        print(f"⚠️ {label} font existuje, ale nepodařilo se ho načíst: {font_path}")
+        return None
+
+    families = QFontDatabase.applicationFontFamilies(font_id)
+
+    if not families:
+        print(f"⚠️ {label} font nemá dostupnou family: {font_path}")
+        return None
+
+    print(f"✅ {label} font načten: {font_path}")
+    print(f"✅ {label} font family: {families[0]}")
+    return families[0]
 
 
 def find_logo():
@@ -353,10 +434,7 @@ def find_logo():
         print(f"✅ Logo nalezeno: {logo_path}")
         return logo_path
 
-    print("⚠️ Logo nenalezeno. Hledám zde:")
-    for path in LOGO_CANDIDATES:
-        print(f" - {path}")
-
+    print("⚠️ Logo nenalezeno.")
     return None
 
 
@@ -400,10 +478,8 @@ def run_powershell_json(command):
 def normalize_list(value):
     if value is None:
         return []
-
     if isinstance(value, list):
         return value
-
     return [value]
 
 
@@ -412,134 +488,6 @@ def format_gb(bytes_value):
         return f"{round(int(bytes_value) / 1024 / 1024 / 1024)} GB"
     except Exception:
         return ""
-
-
-def path_exists(path):
-    try:
-        return path and Path(path).exists()
-    except Exception:
-        return False
-
-
-def find_steam_installation():
-    if not is_windows():
-        return None
-
-    candidates = []
-
-    program_files_x86 = os.environ.get("ProgramFiles(x86)")
-    program_files = os.environ.get("ProgramFiles")
-    local_app_data = os.environ.get("LOCALAPPDATA")
-
-    if program_files_x86:
-        candidates.append(Path(program_files_x86) / "Steam" / "steam.exe")
-
-    if program_files:
-        candidates.append(Path(program_files) / "Steam" / "steam.exe")
-
-    if local_app_data:
-        candidates.append(Path(local_app_data) / "Steam" / "steam.exe")
-
-    try:
-        import winreg
-
-        registry_locations = [
-            (winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam", "SteamExe"),
-            (winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam", "SteamPath"),
-            (winreg.HKEY_LOCAL_MACHINE, r"Software\Valve\Steam", "InstallPath"),
-            (winreg.HKEY_LOCAL_MACHINE, r"Software\WOW6432Node\Valve\Steam", "InstallPath"),
-        ]
-
-        for root, key_path, value_name in registry_locations:
-            try:
-                with winreg.OpenKey(root, key_path) as key:
-                    value, _ = winreg.QueryValueEx(key, value_name)
-                    if value:
-                        value_path = Path(value)
-                        if value_path.suffix.lower() == ".exe":
-                            candidates.append(value_path)
-                        else:
-                            candidates.append(value_path / "steam.exe")
-            except Exception:
-                pass
-
-    except Exception:
-        pass
-
-    for candidate in candidates:
-        if path_exists(candidate):
-            return str(candidate)
-
-    return None
-
-
-def find_discord_installation():
-    if not is_windows():
-        return None
-
-    candidates = []
-
-    local_app_data = os.environ.get("LOCALAPPDATA")
-    program_files = os.environ.get("ProgramFiles")
-    program_files_x86 = os.environ.get("ProgramFiles(x86)")
-
-    if local_app_data:
-        discord_dir = Path(local_app_data) / "Discord"
-
-        candidates.append(discord_dir / "Update.exe")
-
-        if discord_dir.exists():
-            try:
-                app_dirs = sorted(
-                    [
-                        path
-                        for path in discord_dir.iterdir()
-                        if path.is_dir() and path.name.lower().startswith("app-")
-                    ],
-                    reverse=True
-                )
-
-                for app_dir in app_dirs:
-                    candidates.append(app_dir / "Discord.exe")
-            except Exception:
-                pass
-
-    if program_files:
-        candidates.append(Path(program_files) / "Discord" / "Discord.exe")
-
-    if program_files_x86:
-        candidates.append(Path(program_files_x86) / "Discord" / "Discord.exe")
-
-    for candidate in candidates:
-        if path_exists(candidate):
-            return str(candidate)
-
-    return None
-
-
-def find_installed_app(installer_key):
-    if installer_key == "steam":
-        return find_steam_installation()
-
-    if installer_key == "discord":
-        return find_discord_installation()
-
-    return None
-
-
-def open_installed_app(installer_key, app_path):
-    if not is_windows() or not app_path:
-        return
-
-    try:
-        if installer_key == "discord" and Path(app_path).name.lower() == "update.exe":
-            subprocess.Popen([app_path, "--processStart", "Discord.exe"])
-            return
-
-        os.startfile(app_path)
-
-    except Exception:
-        pass
 
 
 def get_windows_pc_info():
@@ -612,12 +560,66 @@ def get_pc_info(language):
     }
 
 
+def detect_gpu_vendor_from_info(info):
+    gpu_text = str(info.get("gpu", "")).lower()
+
+    if "nvidia" in gpu_text or "geforce" in gpu_text or "quadro" in gpu_text or "rtx" in gpu_text or "gtx" in gpu_text:
+        return "nvidia"
+
+    if "amd" in gpu_text or "radeon" in gpu_text or "rx " in gpu_text:
+        return "amd"
+
+    if "intel" in gpu_text or "arc" in gpu_text or "iris" in gpu_text:
+        return "intel"
+
+    return None
+
+
+def find_windows_executable(exe_name):
+    if not is_windows():
+        return None
+
+    search_roots = [
+        os.environ.get("ProgramFiles"),
+        os.environ.get("ProgramFiles(x86)"),
+        os.environ.get("LOCALAPPDATA"),
+        os.environ.get("APPDATA"),
+    ]
+
+    for root in search_roots:
+        if not root:
+            continue
+
+        root_path = Path(root)
+
+        try:
+            matches = list(root_path.rglob(exe_name))
+            if matches:
+                return str(matches[0])
+        except Exception:
+            pass
+
+    return None
+
+
+def check_installed_app(installer_key):
+    if installer_key == "steam":
+        return find_windows_executable("steam.exe")
+
+    if installer_key == "discord":
+        discord = find_windows_executable("Discord.exe")
+        if discord:
+            return discord
+        return find_windows_executable("Update.exe")
+
+    return None
+
+
 def download_and_run_installer(parent, installer_key, language):
     t = TRANSLATIONS[language]
     installer = SOFTWARE_INSTALLERS.get(installer_key)
 
     if not installer:
-        QMessageBox.warning(parent, "Instalace", t["installer_missing"])
         return
 
     name = installer["name"]
@@ -626,15 +628,14 @@ def download_and_run_installer(parent, installer_key, language):
         webbrowser.open(installer["fallback_url"])
         return
 
-    installed_path = find_installed_app(installer_key)
+    installed_path = check_installed_app(installer_key)
 
     if installed_path:
         QMessageBox.information(
             parent,
             t["already_installed_title"].format(name=name),
-            t["already_installed_text"].format(name=name, path=installed_path)
+            t["already_installed_text"].format(name=name)
         )
-        open_installed_app(installer_key, installed_path)
         return
 
     reply = QMessageBox.question(
@@ -675,9 +676,6 @@ def download_and_run_installer(parent, installer_key, language):
 
         installer_path.write_bytes(data)
 
-        if not installer_path.exists() or installer_path.stat().st_size <= 0:
-            raise RuntimeError("Instalátor se nepodařilo uložit.")
-
         if installer_path.suffix.lower() == ".msi":
             subprocess.Popen(["msiexec", "/i", str(installer_path)])
         else:
@@ -692,11 +690,34 @@ def download_and_run_installer(parent, installer_key, language):
         webbrowser.open(installer["fallback_url"])
 
 
+class AppBackground(QWidget):
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        rect = self.rect()
+
+        base = QLinearGradient(0, 0, rect.width(), rect.height())
+        base.setColorAt(0.00, QColor("#0F1118"))
+        base.setColorAt(0.52, QColor("#18243C"))
+        base.setColorAt(1.00, QColor("#284C87"))
+        painter.fillRect(rect, base)
+
+        soft = QLinearGradient(0, 0, rect.width(), 0)
+        soft.setColorAt(0.00, QColor(255, 255, 255, 0))
+        soft.setColorAt(0.72, QColor(0, 114, 198, 10))
+        soft.setColorAt(1.00, QColor(0, 114, 198, 26))
+        painter.fillRect(rect, soft)
+
+        painter.end()
+
+
 class SvgLogo(QLabel):
-    def __init__(self, svg_path, width=310, height=88, scale_factor=0.76, y_offset=2):
+    def __init__(self, svg_path, width=360, height=76, scale_factor=0.64, right_padding=4, y_offset=-3):
         super().__init__()
         self.svg_path = str(svg_path)
         self.scale_factor = scale_factor
+        self.right_padding = right_padding
         self.y_offset = y_offset
         self.setObjectName("LogoImage")
         self.setFixedSize(width, height)
@@ -724,7 +745,7 @@ class SvgLogo(QLabel):
             target_width = default_size.width() * scale
             target_height = default_size.height() * scale
 
-            x = (self.width() - target_width) / 2
+            x = self.width() - target_width - self.right_padding
             y = ((self.height() - target_height) / 2) + self.y_offset
 
             target = QRectF(x, y, target_width, target_height)
@@ -742,8 +763,43 @@ class MenuButton(QPushButton):
     def __init__(self):
         super().__init__()
         self.setCursor(Qt.PointingHandCursor)
-        self.setFixedHeight(64)
+        self.setFixedHeight(34)
         self.setCheckable(True)
+        self.setMouseTracking(True)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.TextAntialiasing, True)
+
+        rect = QRectF(3.0, 3.0, self.width() - 6.0, self.height() - 6.0)
+
+        if self.isChecked():
+            gradient = QLinearGradient(rect.left(), rect.top(), rect.right(), rect.bottom())
+            gradient.setColorAt(0.0, QColor("#1f4f8f"))
+            gradient.setColorAt(1.0, QColor("#0072c6"))
+
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(gradient)
+            painter.drawRoundedRect(rect, 8, 8)
+
+            text_color = QColor("#ffffff")
+
+        elif self.underMouse():
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor(255, 255, 255, 12))
+            painter.drawRoundedRect(rect, 8, 8)
+
+            text_color = QColor(255, 255, 255, 220)
+
+        else:
+            text_color = QColor(255, 255, 255, 166)
+
+        painter.setPen(text_color)
+        painter.setFont(self.font())
+        painter.drawText(rect, Qt.AlignCenter, self.text())
+
+        painter.end()
 
 
 class LangButton(QPushButton):
@@ -752,8 +808,8 @@ class LangButton(QPushButton):
         self.language = language
         self.setCursor(Qt.PointingHandCursor)
         self.setCheckable(True)
-        self.setFixedHeight(34)
-        self.setFixedWidth(78)
+        self.setFixedHeight(31)
+        self.setFixedWidth(74)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -762,17 +818,17 @@ class LangButton(QPushButton):
         rect = self.rect().adjusted(1, 1, -1, -1)
 
         if self.isChecked():
-            bg = QColor(255, 255, 255, 46)
-            border = QColor(255, 255, 255, 96)
+            bg = QColor(255, 255, 255, 40)
+            border = QColor(255, 255, 255, 88)
             text_color = QColor(255, 255, 255, 245)
         elif self.underMouse():
-            bg = QColor(255, 255, 255, 30)
-            border = QColor(255, 255, 255, 60)
-            text_color = QColor(255, 255, 255, 230)
+            bg = QColor(255, 255, 255, 27)
+            border = QColor(255, 255, 255, 58)
+            text_color = QColor(255, 255, 255, 225)
         else:
-            bg = QColor(255, 255, 255, 18)
-            border = QColor(255, 255, 255, 36)
-            text_color = QColor(255, 255, 255, 190)
+            bg = QColor(255, 255, 255, 15)
+            border = QColor(255, 255, 255, 34)
+            text_color = QColor(255, 255, 255, 185)
 
         painter.setPen(QPen(border, 1))
         painter.setBrush(bg)
@@ -839,36 +895,52 @@ class LangButton(QPushButton):
 
 
 class SocialButton(QPushButton):
-    def __init__(self, text, social_type):
+    ICONS = {
+        "facebook": "\uf39e",
+        "instagram": "\uf16d",
+        "discord": "\uf392",
+    }
+
+    FALLBACK_ICONS = {
+        "facebook": "f",
+        "instagram": "◎",
+        "discord": "D",
+    }
+
+    def __init__(self, text, social_type, icon_font_family=None):
         super().__init__(text)
         self.social_type = social_type
+        self.icon_font_family = icon_font_family
         self.setObjectName("FooterSocialButton")
         self.setCursor(Qt.PointingHandCursor)
-        self.setFixedHeight(42)
-        self.setMinimumWidth(118)
+        self.setFixedHeight(31)
+        self.setFixedWidth(104)
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.TextAntialiasing, True)
 
         rect = self.rect().adjusted(1, 1, -1, -1)
 
         if self.underMouse():
             bg = QColor("#ffffff")
-            border = QColor(36, 79, 136, 72)
+            border = QColor(36, 79, 136, 70)
             icon_bg = QColor("#244f88")
             icon_color = QColor("#ffffff")
+            text_color = QColor("#244f88")
         else:
-            bg = QColor(255, 255, 255, 215)
-            border = QColor(36, 79, 136, 36)
-            icon_bg = QColor(36, 79, 136, 22)
+            bg = QColor(255, 255, 255, 214)
+            border = QColor(36, 79, 136, 32)
+            icon_bg = QColor(36, 79, 136, 18)
             icon_color = QColor("#244f88")
+            text_color = QColor("#244f88")
 
         painter.setPen(QPen(border, 1))
         painter.setBrush(bg)
-        painter.drawRoundedRect(rect, 10, 10)
+        painter.drawRoundedRect(rect, 9, 9)
 
-        icon_rect = QRectF(14, 9, 24, 24)
+        icon_rect = QRectF(8, 5, 21, 21)
 
         painter.setPen(Qt.NoPen)
         painter.setBrush(icon_bg)
@@ -876,38 +948,27 @@ class SocialButton(QPushButton):
 
         painter.setPen(icon_color)
 
-        if self.social_type == "facebook":
-            font = painter.font()
-            font.setBold(True)
-            font.setPixelSize(18)
-            painter.setFont(font)
-            painter.drawText(icon_rect, Qt.AlignCenter, "f")
+        if self.icon_font_family:
+            icon_font = QFont(self.icon_font_family)
+            icon_font.setPixelSize(11)
+            icon_font.setWeight(QFont.Normal)
+            painter.setFont(icon_font)
+            painter.drawText(icon_rect, Qt.AlignCenter, self.ICONS.get(self.social_type, ""))
+        else:
+            fallback_font = QFont(self.font())
+            fallback_font.setBold(True)
+            fallback_font.setPixelSize(11)
+            painter.setFont(fallback_font)
+            painter.drawText(icon_rect, Qt.AlignCenter, self.FALLBACK_ICONS.get(self.social_type, ""))
 
-        elif self.social_type == "instagram":
-            pen = QPen(icon_color, 2)
-            painter.setPen(pen)
-            painter.setBrush(Qt.NoBrush)
-            painter.drawRoundedRect(icon_rect.adjusted(6, 6, -6, -6), 4, 4)
-            painter.drawEllipse(QRectF(icon_rect.center().x() - 3.5, icon_rect.center().y() - 3.5, 7, 7))
-            painter.setBrush(icon_color)
-            painter.setPen(Qt.NoPen)
-            painter.drawEllipse(QRectF(icon_rect.right() - 9, icon_rect.top() + 7, 3.2, 3.2))
+        text_font = QFont(self.font())
+        text_font.setBold(False)
+        text_font.setPixelSize(12)
+        painter.setFont(text_font)
+        painter.setPen(text_color)
 
-        elif self.social_type == "discord":
-            painter.setBrush(icon_color)
-            painter.setPen(Qt.NoPen)
-            painter.drawRoundedRect(QRectF(icon_rect.left() + 5, icon_rect.top() + 7, 14, 9), 4, 4)
-            painter.setBrush(icon_bg)
-            painter.drawEllipse(QRectF(icon_rect.left() + 8, icon_rect.top() + 10, 2.6, 2.6))
-            painter.drawEllipse(QRectF(icon_rect.left() + 13.5, icon_rect.top() + 10, 2.6, 2.6))
-
-        font = painter.font()
-        font.setBold(False)
-        font.setPixelSize(14)
-        painter.setFont(font)
-        painter.setPen(QColor("#244f88"))
         painter.drawText(
-            QRectF(46, 0, self.width() - 52, self.height()),
+            QRectF(37, 0, self.width() - 41, self.height()),
             Qt.AlignVCenter | Qt.AlignLeft,
             self.text()
         )
@@ -916,23 +977,61 @@ class SocialButton(QPushButton):
 
 
 class TileButton(QPushButton):
-    def __init__(self, title, subtitle, url=None, installer_key=None, language="cz"):
+    def __init__(
+        self,
+        title,
+        subtitle,
+        url=None,
+        installer_key=None,
+        language="cz",
+        tile_key=None,
+        driver_vendor=None,
+    ):
         super().__init__()
         self.url = url
         self.installer_key = installer_key
         self.language = language
+        self.tile_key = tile_key
+        self.driver_vendor = driver_vendor
+        self.base_title = title
+        self.base_subtitle = subtitle
+        self.is_recommended = False
         self.setCursor(Qt.PointingHandCursor)
-        self.setMinimumHeight(128)
+        self.setMinimumHeight(86)
         self.update_text(title, subtitle)
         self.clicked.connect(self.handle_click)
 
-    def update_text(self, title, subtitle):
-        self.setText(f"{title}\n{subtitle}")
+    def update_text(self, title, subtitle, badge=None):
+        self.base_title = title
+        self.base_subtitle = subtitle
+
+        if badge:
+            self.setText(f"{title}\n{badge}\n{subtitle}")
+            self.setProperty("recommended", True)
+            self.is_recommended = True
+        else:
+            self.setText(f"{title}\n{subtitle}")
+            self.setProperty("recommended", False)
+            self.is_recommended = False
+
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
 
     def set_language(self, language):
         self.language = language
 
     def handle_click(self):
+        window = self.window()
+
+        if self.url == "windows_update" and hasattr(window, "open_windows_update"):
+            window.open_windows_update()
+            return
+
+        if self.driver_vendor and hasattr(window, "should_open_driver"):
+            if not window.should_open_driver(self.driver_vendor):
+                return
+
         if self.installer_key:
             download_and_run_installer(self.window(), self.installer_key, self.language)
             return
@@ -946,12 +1045,12 @@ class PcInfoCard(QFrame):
         super().__init__()
         self.key = key
         self.setObjectName("PcInfoCard")
-        self.setMinimumHeight(104)
-        self.setMaximumHeight(118)
+        self.setMinimumHeight(82)
+        self.setMaximumHeight(90)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(18, 15, 18, 15)
-        layout.setSpacing(8)
+        layout.setContentsMargins(16, 11, 16, 11)
+        layout.setSpacing(6)
 
         self.title_label = QLabel()
         self.title_label.setObjectName("PcInfoTitle")
@@ -974,7 +1073,11 @@ class HelloCompStart(QWidget):
         super().__init__()
 
         self.language = "cz"
+        self.pc_info = {}
+        self.gpu_vendor = None
+
         self.app_font = load_app_font()
+        self.fa_brands_font = load_font_family_from_candidates(FA_BRANDS_CANDIDATES, "Font Awesome Brands")
         self.logo_path = find_logo()
 
         self.setWindowTitle(TRANSLATIONS[self.language]["window_title"])
@@ -993,21 +1096,30 @@ class HelloCompStart(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
+        self.main_background = AppBackground()
+
+        main_layout = QVBoxLayout(self.main_background)
+        main_layout.setContentsMargins(36, 28, 36, 22)
+        main_layout.setSpacing(0)
+
         header = self.create_header()
-        menu = self.create_menu()
+        menu_wrap = self.create_menu_wrap()
 
         self.pages = QStackedWidget()
+        self.pages.setObjectName("Pages")
         self.pages.addWidget(self.create_my_pc_page())
         self.pages.addWidget(self.create_first_steps_page())
         self.pages.addWidget(self.create_support_page())
         self.pages.addWidget(self.create_software_page())
         self.pages.addWidget(self.create_service_page())
 
+        main_layout.addWidget(header)
+        main_layout.addWidget(menu_wrap)
+        main_layout.addWidget(self.pages)
+
         self.footer = self.create_footer()
 
-        root.addWidget(header)
-        root.addWidget(menu)
-        root.addWidget(self.pages)
+        root.addWidget(self.main_background)
         root.addWidget(self.footer)
 
         self.set_active_menu(0)
@@ -1018,36 +1130,39 @@ class HelloCompStart(QWidget):
     def create_header(self):
         header = QFrame()
         header.setObjectName("Header")
-        header.setFixedHeight(146)
+        header.setFixedHeight(140)
 
         layout = QHBoxLayout(header)
-        layout.setContentsMargins(44, 0, 44, 0)
-        layout.setSpacing(24)
+        layout.setContentsMargins(34, 18, 34, 18)
+        layout.setSpacing(28)
 
-        left_wrapper_widget = QWidget()
-        left_wrapper_widget.setObjectName("HeaderTextWrapper")
+        left_widget = QWidget()
+        left_widget.setObjectName("HeaderTextWrapper")
 
-        left_wrapper = QVBoxLayout(left_wrapper_widget)
-        left_wrapper.setContentsMargins(0, 0, 0, 0)
-        left_wrapper.setSpacing(8)
+        left = QVBoxLayout(left_widget)
+        left.setContentsMargins(0, 0, 0, 0)
+        left.setSpacing(8)
 
         self.header_title = QLabel()
         self.header_title.setObjectName("HeaderTitle")
 
         self.header_subtitle = QLabel()
         self.header_subtitle.setObjectName("HeaderSubtitle")
+        self.header_subtitle.setWordWrap(True)
+        self.header_subtitle.setMaximumWidth(570)
 
-        left_wrapper.addStretch()
-        left_wrapper.addWidget(self.header_title)
-        left_wrapper.addWidget(self.header_subtitle)
-        left_wrapper.addStretch()
+        left.addStretch()
+        left.addWidget(self.header_title)
+        left.addWidget(self.header_subtitle)
+        left.addStretch()
 
-        right_wrapper = QWidget()
-        right_wrapper.setObjectName("HeaderRightWrapper")
+        right_widget = QWidget()
+        right_widget.setObjectName("HeaderRightWrapper")
+        right_widget.setFixedWidth(440)
 
-        right_layout = QVBoxLayout(right_wrapper)
-        right_layout.setContentsMargins(0, 14, 0, 18)
-        right_layout.setSpacing(8)
+        right = QVBoxLayout(right_widget)
+        right.setContentsMargins(0, 0, 0, 0)
+        right.setSpacing(10)
 
         lang_row = QWidget()
         lang_row.setObjectName("LangRow")
@@ -1063,58 +1178,55 @@ class HelloCompStart(QWidget):
             self.lang_buttons.append(btn)
             lang_layout.addWidget(btn)
 
-        logo_wrapper = QFrame()
-        logo_wrapper.setObjectName("LogoWrapper")
-        logo_wrapper.setFixedSize(330, 92)
+        logo_holder = QWidget()
+        logo_holder.setObjectName("LogoHolder")
+        logo_holder.setFixedSize(410, 76)
 
-        logo_layout = QVBoxLayout(logo_wrapper)
+        logo_layout = QVBoxLayout(logo_holder)
         logo_layout.setContentsMargins(0, 0, 0, 0)
         logo_layout.setSpacing(0)
 
         if self.logo_path and self.logo_path.suffix.lower() == ".svg":
-            logo = SvgLogo(self.logo_path, width=310, height=88, scale_factor=0.76, y_offset=2)
+            logo = SvgLogo(
+                self.logo_path,
+                width=390,
+                height=76,
+                scale_factor=0.64,
+                right_padding=2,
+                y_offset=-3
+            )
             logo_layout.addWidget(logo, alignment=Qt.AlignCenter)
 
         elif self.logo_path and self.logo_path.suffix.lower() in [".png", ".jpg", ".jpeg", ".webp"]:
             logo = QLabel()
             logo.setObjectName("LogoImage")
-
             pixmap = QPixmap(str(self.logo_path))
-            logo.setPixmap(
-                pixmap.scaled(
-                    310,
-                    88,
-                    Qt.KeepAspectRatio,
-                    Qt.SmoothTransformation
-                )
-            )
-            logo.setAlignment(Qt.AlignCenter)
-
-            logo_layout.addWidget(logo, alignment=Qt.AlignCenter)
+            logo.setPixmap(pixmap.scaled(390, 76, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            logo.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            logo_layout.addWidget(logo, alignment=Qt.AlignRight)
 
         else:
             logo = QLabel("HELLOCOMP")
             logo.setObjectName("LogoFallback")
-            logo.setAlignment(Qt.AlignCenter)
+            logo.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
             logo_layout.addWidget(logo)
 
-        right_layout.addWidget(lang_row)
-        right_layout.addWidget(logo_wrapper)
+        right.addWidget(lang_row)
+        right.addWidget(logo_holder, alignment=Qt.AlignRight)
 
-        layout.addWidget(left_wrapper_widget)
-        layout.addStretch()
-        layout.addWidget(right_wrapper)
+        layout.addWidget(left_widget, 1)
+        layout.addWidget(right_widget, 0)
 
         return header
 
     def create_footer(self):
         footer = QFrame()
         footer.setObjectName("Footer")
-        footer.setFixedHeight(64)
+        footer.setFixedHeight(60)
 
         footer_layout = QHBoxLayout(footer)
-        footer_layout.setContentsMargins(44, 0, 44, 0)
-        footer_layout.setSpacing(20)
+        footer_layout.setContentsMargins(42, 0, 42, 0)
+        footer_layout.setSpacing(14)
 
         self.footer_text = QLabel()
         self.footer_text.setObjectName("FooterText")
@@ -1129,15 +1241,15 @@ class HelloCompStart(QWidget):
 
         footer_social_layout = QHBoxLayout(self.footer_social)
         footer_social_layout.setContentsMargins(0, 0, 0, 0)
-        footer_social_layout.setSpacing(8)
+        footer_social_layout.setSpacing(7)
 
-        self.footer_facebook = SocialButton("Facebook", "facebook")
+        self.footer_facebook = SocialButton("Facebook", "facebook", self.fa_brands_font)
         self.footer_facebook.clicked.connect(lambda: open_url("https://www.facebook.com/HelloComp.cz"))
 
-        self.footer_instagram = SocialButton("Instagram", "instagram")
+        self.footer_instagram = SocialButton("Instagram", "instagram", self.fa_brands_font)
         self.footer_instagram.clicked.connect(lambda: open_url("https://www.instagram.com/hellocompcz"))
 
-        self.footer_discord = SocialButton("Discord", "discord")
+        self.footer_discord = SocialButton("Discord", "discord", self.fa_brands_font)
         self.footer_discord.clicked.connect(lambda: open_url("https://discord.com/invite/dQDDXyek9x"))
 
         footer_social_layout.addWidget(self.footer_facebook)
@@ -1151,14 +1263,23 @@ class HelloCompStart(QWidget):
 
         return footer
 
-    def create_menu(self):
+    def create_menu_wrap(self):
+        wrap = QWidget()
+        wrap.setObjectName("MenuWrap")
+        wrap.setFixedHeight(76)
+
+        wrap_layout = QHBoxLayout(wrap)
+        wrap_layout.setContentsMargins(0, 17, 0, 17)
+        wrap_layout.setSpacing(0)
+
         menu = QFrame()
         menu.setObjectName("Menu")
-        menu.setFixedHeight(64)
+        menu.setFixedHeight(42)
+        menu.setFixedWidth(830)
 
         layout = QHBoxLayout(menu)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout.setContentsMargins(5, 4, 5, 4)
+        layout.setSpacing(5)
 
         for index in range(5):
             btn = MenuButton()
@@ -1166,7 +1287,11 @@ class HelloCompStart(QWidget):
             self.menu_buttons.append(btn)
             layout.addWidget(btn)
 
-        return menu
+        wrap_layout.addStretch()
+        wrap_layout.addWidget(menu)
+        wrap_layout.addStretch()
+
+        return wrap
 
     def set_active_menu(self, index):
         self.pages.setCurrentIndex(index)
@@ -1187,8 +1312,8 @@ class HelloCompStart(QWidget):
         self.refresh_pc_button = QPushButton()
         self.refresh_pc_button.setObjectName("RefreshPcButton")
         self.refresh_pc_button.setCursor(Qt.PointingHandCursor)
-        self.refresh_pc_button.setFixedHeight(38)
-        self.refresh_pc_button.clicked.connect(self.load_pc_information)
+        self.refresh_pc_button.setFixedHeight(36)
+        self.refresh_pc_button.clicked.connect(self.load_pc_information_with_feedback)
 
         top_layout.addStretch()
         top_layout.addWidget(self.refresh_pc_button)
@@ -1197,9 +1322,9 @@ class HelloCompStart(QWidget):
         grid_wrapper.setObjectName("PcGridWrapper")
 
         grid = QGridLayout(grid_wrapper)
-        grid.setContentsMargins(0, 16, 0, 0)
-        grid.setHorizontalSpacing(16)
-        grid.setVerticalSpacing(16)
+        grid.setContentsMargins(0, 12, 0, 0)
+        grid.setHorizontalSpacing(14)
+        grid.setVerticalSpacing(11)
 
         fields = [
             "manufacturer",
@@ -1228,9 +1353,9 @@ class HelloCompStart(QWidget):
     def create_first_steps_page(self):
         page = self.create_page_base("first_steps")
         tiles = self.create_tiles_row("first_steps", [
-            ("https://www.hellocomp.cz/", None),
-            ("https://www.hellocomp.cz/", None),
-            ("https://www.hellocomp.cz/", None),
+            ("home", None, "first_guide", None),
+            ("home", None, "activation", None),
+            ("home", None, "settings", None),
         ])
         page.layout().addWidget(tiles)
         page.layout().addStretch()
@@ -1239,9 +1364,9 @@ class HelloCompStart(QWidget):
     def create_support_page(self):
         page = self.create_page_base("support")
         tiles = self.create_tiles_row("support", [
-            ("https://www.hellocomp.cz/kontakty/", None),
-            ("mailto:info@hellocomp.cz", None),
-            ("https://www.hellocomp.cz/", None),
+            ("contact", None, "contact", None),
+            ("mailto:info@hellocomp.cz", None, "email", None),
+            ("faq", None, "faq", None),
         ])
         page.layout().addWidget(tiles)
         page.layout().addStretch()
@@ -1249,13 +1374,18 @@ class HelloCompStart(QWidget):
 
     def create_software_page(self):
         page = self.create_page_base("software")
-        tiles = self.create_tiles_row("software", [
-            (None, "steam"),
-            (None, "discord"),
-            ("https://www.nvidia.com/", None),
-            ("https://www.amd.com/", None),
-            ("https://store.epicgames.com/download", None),
-        ])
+
+        tiles = self.create_tiles_grid("software", [
+            (None, "steam", "steam", None),
+            (None, "discord", "discord", None),
+            (SOFTWARE_URLS["epic"], None, "epic", None),
+            (SOFTWARE_URLS["occt"], None, "occt", None),
+            (SOFTWARE_URLS["nvidia"], None, "nvidia", "nvidia"),
+            (SOFTWARE_URLS["amd"], None, "amd", "amd"),
+            (SOFTWARE_URLS["intel"], None, "intel", "intel"),
+            ("windows_update", None, "windows_update", None),
+        ], columns=4)
+
         page.layout().addWidget(tiles)
         page.layout().addStretch()
         return page
@@ -1263,9 +1393,9 @@ class HelloCompStart(QWidget):
     def create_service_page(self):
         page = self.create_page_base("service")
         tiles = self.create_tiles_row("service", [
-            ("https://www.hellocomp.cz/", None),
-            ("https://www.hellocomp.cz/", None),
-            ("https://www.hellocomp.cz/", None),
+            ("home", None, "claim", None),
+            ("contact", None, "service", None),
+            ("faq", None, "shipping", None),
         ])
         page.layout().addWidget(tiles)
         page.layout().addStretch()
@@ -1276,8 +1406,8 @@ class HelloCompStart(QWidget):
         page.setObjectName("Page")
 
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(50, 30, 50, 18)
-        layout.setSpacing(15)
+        layout.setContentsMargins(30, 26, 30, 26)
+        layout.setSpacing(13)
 
         title_label = QLabel()
         title_label.setObjectName("PageTitle")
@@ -1301,17 +1431,188 @@ class HelloCompStart(QWidget):
         wrapper.setObjectName("TilesWrapper")
 
         layout = QHBoxLayout(wrapper)
-        layout.setContentsMargins(0, 20, 0, 0)
-        layout.setSpacing(22)
+        layout.setContentsMargins(0, 18, 0, 0)
+        layout.setSpacing(15)
 
         self.tile_groups[key] = []
 
-        for url, installer_key in actions:
-            tile = TileButton("", "", url, installer_key, self.language)
+        for url, installer_key, tile_key, driver_vendor in actions:
+            tile = TileButton(
+                "",
+                "",
+                url,
+                installer_key,
+                self.language,
+                tile_key=tile_key,
+                driver_vendor=driver_vendor,
+            )
             self.tile_groups[key].append(tile)
             layout.addWidget(tile)
 
         return wrapper
+
+    def create_tiles_grid(self, key, actions, columns=4):
+        wrapper = QWidget()
+        wrapper.setObjectName("TilesWrapper")
+
+        layout = QGridLayout(wrapper)
+        layout.setContentsMargins(0, 18, 0, 0)
+        layout.setHorizontalSpacing(13)
+        layout.setVerticalSpacing(12)
+
+        self.tile_groups[key] = []
+
+        for index, (url, installer_key, tile_key, driver_vendor) in enumerate(actions):
+            tile = TileButton(
+                "",
+                "",
+                url,
+                installer_key,
+                self.language,
+                tile_key=tile_key,
+                driver_vendor=driver_vendor,
+            )
+            self.tile_groups[key].append(tile)
+
+            row = index // columns
+            column = index % columns
+
+            layout.addWidget(tile, row, column)
+
+        return wrapper
+
+    def resolve_url(self, url_key_or_url):
+        if not url_key_or_url:
+            return None
+
+        if url_key_or_url == "windows_update":
+            return "windows_update"
+
+        if url_key_or_url.startswith("http") or url_key_or_url.startswith("mailto:"):
+            return url_key_or_url
+
+        return LANGUAGE_URLS.get(self.language, LANGUAGE_URLS["cz"]).get(url_key_or_url)
+
+    def update_tile_urls(self):
+        mapped_tiles = {
+            "first_steps": ["home", "home", "home"],
+            "support": ["contact", "mailto:info@hellocomp.cz", "faq"],
+            "service": ["home", "contact", "faq"],
+        }
+
+        for group_key, url_keys in mapped_tiles.items():
+            tiles = self.tile_groups.get(group_key, [])
+
+            for tile, url_key in zip(tiles, url_keys):
+                tile.url = self.resolve_url(url_key)
+
+        software_urls = {
+            "steam": None,
+            "discord": None,
+            "epic": SOFTWARE_URLS["epic"],
+            "occt": SOFTWARE_URLS["occt"],
+            "nvidia": SOFTWARE_URLS["nvidia"],
+            "amd": SOFTWARE_URLS["amd"],
+            "intel": SOFTWARE_URLS["intel"],
+            "windows_update": "windows_update",
+        }
+
+        for tile in self.tile_groups.get("software", []):
+            if tile.tile_key in software_urls:
+                tile.url = software_urls[tile.tile_key]
+
+    def should_open_driver(self, selected_vendor):
+        t = TRANSLATIONS[self.language]
+
+        if self.gpu_vendor is None:
+            QMessageBox.information(
+                self,
+                t["gpu_unknown_title"],
+                t["gpu_unknown_text"]
+            )
+            return True
+
+        if self.gpu_vendor == selected_vendor:
+            return True
+
+        detected_name = DRIVER_NAMES.get(self.gpu_vendor, self.gpu_vendor)
+        recommended_name = DRIVER_NAMES.get(self.gpu_vendor, self.gpu_vendor)
+        selected_name = DRIVER_NAMES.get(selected_vendor, selected_vendor)
+
+        reply = QMessageBox.warning(
+            self,
+            t["wrong_driver_title"],
+            t["wrong_driver_text"].format(
+                detected=detected_name,
+                recommended=recommended_name,
+                selected=selected_name,
+            ),
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        return reply == QMessageBox.Yes
+
+    def apply_gpu_recommendations(self):
+        t = TRANSLATIONS[self.language]
+        recommended_tile = None
+
+        if self.gpu_vendor == "nvidia":
+            recommended_tile = "nvidia"
+
+        elif self.gpu_vendor == "amd":
+            recommended_tile = "amd"
+
+        elif self.gpu_vendor == "intel":
+            recommended_tile = "intel"
+
+        tiles = self.tile_groups.get("software", [])
+
+        for tile in tiles:
+            badge = t["recommended_badge"] if tile.tile_key == recommended_tile else None
+            tile.update_text(tile.base_title, tile.base_subtitle, badge=badge)
+
+    def open_windows_update(self):
+        if is_windows():
+            try:
+                subprocess.Popen(
+                    ["UsoClient.exe", "StartScan"],
+                    shell=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+            except Exception:
+                pass
+
+            try:
+                os.startfile("ms-settings:windowsupdate-action")
+                return
+            except Exception:
+                pass
+
+            try:
+                os.startfile("ms-settings:windowsupdate")
+                return
+            except Exception:
+                pass
+
+        webbrowser.open("https://support.microsoft.com/windows")
+
+    def load_pc_information_with_feedback(self):
+        t = TRANSLATIONS[self.language]
+        original_text = t["my_pc_refresh"]
+
+        self.refresh_pc_button.setEnabled(False)
+        self.refresh_pc_button.setText(t["my_pc_loading"])
+        QApplication.processEvents()
+
+        self.load_pc_information()
+
+        QTimer.singleShot(450, lambda: self.finish_refresh_button(original_text))
+
+    def finish_refresh_button(self, text):
+        self.refresh_pc_button.setText(text)
+        self.refresh_pc_button.setEnabled(True)
 
     def load_pc_information(self):
         t = TRANSLATIONS[self.language]
@@ -1319,17 +1620,19 @@ class HelloCompStart(QWidget):
         try:
             info = get_pc_info(self.language)
         except Exception as error:
-            info = {
-                key: "—"
-                for key in t["pc_fields"].keys()
-            }
+            info = {key: "—" for key in t["pc_fields"].keys()}
             info["manufacturer"] = "HelloComp"
             info["cpu"] = str(error)
+
+        self.pc_info = info
+        self.gpu_vendor = detect_gpu_vendor_from_info(info)
 
         for key, card in self.pc_cards.items():
             title = t["pc_fields"].get(key, key)
             value = info.get(key, "—")
             card.update_card(title, value)
+
+        self.apply_gpu_recommendations()
 
     def update_language(self, language):
         self.language = language
@@ -1366,37 +1669,39 @@ class HelloCompStart(QWidget):
         for key, card in self.pc_cards.items():
             card.title_label.setText(t["pc_fields"].get(key, key))
 
+        self.update_tile_urls()
+        self.apply_gpu_recommendations()
+
     def apply_styles(self):
         self.setStyleSheet(f"""
             QWidget {{
-                background: #0F1118;
+                background: transparent;
                 color: #ffffff;
                 font-family: "{self.app_font}";
                 font-size: 15px;
             }}
 
             #Header {{
-                background: qlineargradient(
-                    x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #0F1118,
-                    stop:0.50 #18243C,
-                    stop:1 #284C87
-                );
-                border-bottom: 1px solid rgba(255,255,255,0.08);
+                background: rgba(15, 17, 24, 0.34);
+                border: 1px solid rgba(255,255,255,0.045);
+                border-radius: 18px;
             }}
 
             #HeaderTextWrapper,
             #HeaderRightWrapper,
             #LangRow,
+            #LogoHolder,
             #PcTopRow,
             #PcGridWrapper,
-            #FooterSocial {{
+            #FooterSocial,
+            #Pages,
+            #MenuWrap {{
                 background: transparent;
             }}
 
             #HeaderTitle {{
                 background: transparent;
-                font-size: 28px;
+                font-size: 30px;
                 font-weight: 400;
                 color: #ffffff;
                 letter-spacing: 0.2px;
@@ -1407,11 +1712,7 @@ class HelloCompStart(QWidget):
                 font-size: 15px;
                 font-weight: 400;
                 color: rgba(255,255,255,0.72);
-            }}
-
-            #LogoWrapper {{
-                background: transparent;
-                border: none;
+                line-height: 1.45;
             }}
 
             #LogoImage {{
@@ -1422,14 +1723,15 @@ class HelloCompStart(QWidget):
             #LogoFallback {{
                 background: transparent;
                 color: #ffffff;
-                font-size: 28px;
+                font-size: 27px;
                 font-weight: 400;
                 letter-spacing: 5px;
             }}
 
             #Menu {{
-                background: #101d32;
-                border-bottom: 3px solid #2f7fe0;
+                background: rgba(8, 15, 27, 0.58);
+                border: 1px solid rgba(255,255,255,0.04);
+                border-radius: 14px;
             }}
 
             QPushButton {{
@@ -1439,27 +1741,13 @@ class HelloCompStart(QWidget):
             }}
 
             MenuButton {{
-                background: rgba(15,17,24,0.34);
-                color: rgba(255,255,255,0.76);
-                border-right: 1px solid rgba(255,255,255,0.055);
-                border-bottom: 3px solid transparent;
+                background: transparent;
+                border: none;
+                color: transparent;
+                padding: 0;
+                margin: 0;
                 font-size: 14px;
                 font-weight: 400;
-            }}
-
-            MenuButton:hover {{
-                background: rgba(255,255,255,0.065);
-                color: #ffffff;
-            }}
-
-            MenuButton:checked {{
-                background: qlineargradient(
-                    x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #18243C,
-                    stop:1 #284C87
-                );
-                color: #ffffff;
-                border-bottom: 3px solid #ffffff;
             }}
 
             LangButton {{
@@ -1469,17 +1757,14 @@ class HelloCompStart(QWidget):
             }}
 
             #Page {{
-                background: qlineargradient(
-                    x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #0F1118,
-                    stop:0.50 #18243C,
-                    stop:1 #284C87
-                );
+                background: rgba(15,17,24,0.12);
+                border: 1px solid rgba(255,255,255,0.035);
+                border-radius: 18px;
             }}
 
             #PageTitle {{
                 background: transparent;
-                font-size: 29px;
+                font-size: 30px;
                 font-weight: 400;
                 color: #ffffff;
                 letter-spacing: 0.2px;
@@ -1487,9 +1772,9 @@ class HelloCompStart(QWidget):
 
             #PageText {{
                 background: transparent;
-                font-size: 16px;
+                font-size: 15px;
                 font-weight: 400;
-                color: rgba(255,255,255,0.74);
+                color: rgba(255,255,255,0.72);
             }}
 
             #TilesWrapper {{
@@ -1497,56 +1782,72 @@ class HelloCompStart(QWidget):
             }}
 
             TileButton {{
-                background: rgba(255,255,255,0.075);
-                border: 1px solid rgba(255,255,255,0.12);
-                border-radius: 13px;
-                padding: 24px;
+                background: rgba(255,255,255,0.056);
+                border: 1px solid rgba(255,255,255,0.065);
+                border-radius: 14px;
+                padding: 15px;
                 text-align: left;
-                font-size: 15px;
+                font-size: 12px;
                 font-weight: 400;
-                line-height: 1.5;
+                line-height: 1.28;
                 color: #ffffff;
             }}
 
             TileButton:hover {{
-                background: rgba(255,255,255,0.13);
-                border: 1px solid rgba(255,255,255,0.22);
+                background: rgba(255,255,255,0.092);
+                border: 1px solid rgba(255,255,255,0.12);
+            }}
+
+            TileButton[recommended="true"] {{
+                background: rgba(0, 114, 198, 0.19);
+                border: 1px solid rgba(0, 114, 198, 0.34);
+            }}
+
+            TileButton[recommended="true"]:hover {{
+                background: rgba(0, 114, 198, 0.25);
+                border: 1px solid rgba(0, 114, 198, 0.45);
             }}
 
             #PcInfoCard {{
-                background: rgba(255,255,255,0.070);
-                border: 1px solid rgba(255,255,255,0.115);
-                border-radius: 12px;
+                background: rgba(255,255,255,0.052);
+                border: 1px solid rgba(255,255,255,0.065);
+                border-radius: 13px;
             }}
 
             #PcInfoTitle {{
                 background: transparent;
-                color: rgba(255,255,255,0.60);
-                font-size: 12px;
+                color: rgba(255,255,255,0.56);
+                font-size: 11px;
                 font-weight: 400;
-                letter-spacing: 0.02em;
+                letter-spacing: 0.025em;
             }}
 
             #PcInfoValue {{
                 background: transparent;
                 color: #ffffff;
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: 400;
-                line-height: 1.30;
+                line-height: 1.25;
             }}
 
             #RefreshPcButton {{
-                background: rgba(255,255,255,0.10);
-                border: 1px solid rgba(255,255,255,0.16);
+                background: rgba(255,255,255,0.09);
+                border: 1px solid rgba(255,255,255,0.13);
                 border-radius: 10px;
-                padding: 0 18px;
+                padding: 0 16px;
                 color: #ffffff;
                 font-size: 13px;
             }}
 
             #RefreshPcButton:hover {{
-                background: rgba(255,255,255,0.17);
-                border: 1px solid rgba(255,255,255,0.26);
+                background: rgba(255,255,255,0.14);
+                border: 1px solid rgba(255,255,255,0.20);
+            }}
+
+            #RefreshPcButton:disabled {{
+                background: rgba(255,255,255,0.055);
+                border: 1px solid rgba(255,255,255,0.09);
+                color: rgba(255,255,255,0.58);
             }}
 
             #Footer {{
@@ -1561,14 +1862,14 @@ class HelloCompStart(QWidget):
             #FooterText {{
                 background: transparent;
                 color: #3f4652;
-                font-size: 13px;
+                font-size: 12px;
                 font-weight: 400;
             }}
 
             #FooterSocialTitle {{
                 background: transparent;
                 color: #5f6f82;
-                font-size: 13px;
+                font-size: 12px;
                 font-weight: 400;
                 letter-spacing: 0.02em;
             }}
@@ -1577,7 +1878,7 @@ class HelloCompStart(QWidget):
                 background: transparent;
                 border: none;
                 color: #244f88;
-                font-size: 13px;
+                font-size: 12px;
                 font-weight: 400;
             }}
         """)
