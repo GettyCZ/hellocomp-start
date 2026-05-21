@@ -1,6 +1,6 @@
 {
-  "version": "2.1-beta2",
+  "version": "2.1-beta2.5",
   "windows_exe_url": "https://github.com/GettyCZ/hellocomp-start/releases/latest/download/HelloComp_Start.exe",
   "release_url": "https://github.com/GettyCZ/hellocomp-start/releases/latest",
-  "notes": "Fix restartu po automatické aktualizaci aplikace."
+  "notes": "Fix doporučených GPU ovladačů a vylepšené detekce hardwaru."
 }

@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 
-APP_VERSION = "2.1-beta2"
+APP_VERSION = "2.1-beta2.5"
 
 APP_WIDTH = 1180
 APP_HEIGHT = 760
@@ -142,6 +142,7 @@ TRANSLATIONS = {
         "footer": f"HelloComp.cz © 2026  |  verze {APP_VERSION}",
         "footer_social_title": "Sledujte nás",
         "recommended_badge": "Doporučeno pro tento PC",
+        "not_recommended_badge": "Není určeno pro tento PC",
 
         "settings": "Nastavení",
         "settings_title": "Nastavení aplikace",
@@ -253,6 +254,7 @@ TRANSLATIONS = {
         "footer": f"HelloComp.cz © 2026  |  verzia {APP_VERSION}",
         "footer_social_title": "Sledujte nás",
         "recommended_badge": "Odporúčané pre tento PC",
+        "not_recommended_badge": "Nie je určené pre tento PC",
 
         "settings": "Nastavenia",
         "settings_title": "Nastavenia aplikácie",
@@ -361,6 +363,7 @@ TRANSLATIONS = {
 TRANSLATIONS["hu"] = {
     **TRANSLATIONS["cz"],
     "lang_label": "HU",
+    "not_recommended_badge": "Nem ehhez a PC-hez",
     "footer": f"HelloComp.cz © 2026  |  verzió {APP_VERSION}",
     "header_title": "Saját HelloComp számítógépem",
     "header_subtitle": "Gyors kezdés, ajánlott alkalmazások, támogatás és szerviz egy helyen.",
@@ -414,6 +417,7 @@ TRANSLATIONS["en"] = {
     "settings_wallpaper_windows_only_title": "Wallpaper",
     "settings_wallpaper_windows_only_text": "Automatic wallpaper setup is available in the Windows version of the app.",
     "recommended_badge": "Recommended for this PC",
+    "not_recommended_badge": "Not for this PC",
     "menu": ["My PC", "First steps", "Support", "Apps", "Service"],
     "my_pc_title": "My PC",
     "my_pc_text": "Overview of the main PC parameters. Detailed hardware information is loaded automatically on Windows.",
@@ -441,6 +445,7 @@ TRANSLATIONS["en"] = {
 TRANSLATIONS["ua"] = {
     **TRANSLATIONS["en"],
     "lang_label": "UA",
+    "not_recommended_badge": "Не для цього ПК",
     "footer": f"HelloComp.cz © 2026  |  версія {APP_VERSION}",
     "header_title": "Мій комп’ютер HelloComp",
     "header_subtitle": "Швидкий старт, рекомендовані програми, підтримка та сервіс в одному місці.",
@@ -658,7 +663,8 @@ def get_windows_pc_info():
     script = r"""
 $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1 Name
 $gpus = Get-CimInstance Win32_VideoController | Select-Object Name
-$ram = Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum
+$ramModules = Get-CimInstance Win32_PhysicalMemory | Select-Object Manufacturer, PartNumber, Capacity, Speed, ConfiguredClockSpeed
+$ram = $ramModules | Measure-Object -Property Capacity -Sum
 $drives = Get-CimInstance Win32_DiskDrive | Select-Object Model, Size, MediaType
 $board = Get-CimInstance Win32_BaseBoard | Select-Object Manufacturer, Product
 
@@ -666,6 +672,7 @@ $board = Get-CimInstance Win32_BaseBoard | Select-Object Manufacturer, Product
     Cpu = $cpu.Name
     Gpu = $gpus
     RamBytes = $ram.Sum
+    RamModules = $ramModules
     Drives = $drives
     BoardManufacturer = $board.Manufacturer
     BoardProduct = $board.Product
@@ -679,6 +686,21 @@ $board = Get-CimInstance Win32_BaseBoard | Select-Object Manufacturer, Product
         name = gpu.get("Name") if isinstance(gpu, dict) else None
         if name:
             gpus.append(name)
+
+    ram_details = []
+    for module in normalize_list(data.get("RamModules")):
+        if not isinstance(module, dict):
+            continue
+
+        manufacturer = (module.get("Manufacturer") or "").strip()
+        part_number = (module.get("PartNumber") or "").strip()
+        capacity = format_gb(module.get("Capacity"))
+        configured_speed = module.get("ConfiguredClockSpeed") or module.get("Speed")
+        speed_text = f"{configured_speed} MHz" if configured_speed else ""
+
+        parts = [part for part in [manufacturer, part_number, capacity, speed_text] if part]
+        if parts:
+            ram_details.append(" / ".join(parts))
 
     drives = []
     for drive in normalize_list(data.get("Drives")):
@@ -702,7 +724,7 @@ $board = Get-CimInstance Win32_BaseBoard | Select-Object Manufacturer, Product
         "manufacturer": "HelloComp",
         "cpu": data.get("Cpu") or "—",
         "gpu": "\n".join(gpus) if gpus else "—",
-        "ram": format_gb(data.get("RamBytes")) or "—",
+        "ram": "\n".join(ram_details) if ram_details else (format_gb(data.get("RamBytes")) or "—"),
         "drives": "\n".join(drives) if drives else "—",
         "baseboard": " ".join([x for x in baseboard_parts if x]) or "—",
     }
@@ -1257,6 +1279,7 @@ class TileButton(QPushButton):
         self.base_title = title
         self.base_subtitle = subtitle
         self.is_recommended = False
+        self.is_driver_disabled = False
         self.setCursor(Qt.PointingHandCursor)
         self.setMinimumHeight(86)
         self.update_text(title, subtitle)
@@ -1282,8 +1305,18 @@ class TileButton(QPushButton):
     def set_language(self, language):
         self.language = language
 
+    def set_driver_state(self, state):
+        self.is_driver_disabled = state == "disabled"
+        self.setProperty("driverState", state)
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+
     def handle_click(self):
         window = self.window()
+
+        if self.is_driver_disabled:
+            return
 
         if self.url == "windows_update" and hasattr(window, "open_windows_update"):
             window.open_windows_update()
@@ -1953,6 +1986,7 @@ class HelloCompStart(QWidget):
     def apply_gpu_recommendations(self):
         t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
         recommended_tile = None
+        driver_tiles = {"nvidia", "amd", "intel"}
 
         if self.gpu_vendor == "nvidia":
             recommended_tile = "nvidia"
@@ -1966,8 +2000,19 @@ class HelloCompStart(QWidget):
         tiles = self.tile_groups.get("software", [])
 
         for tile in tiles:
-            badge = t["recommended_badge"] if tile.tile_key == recommended_tile else None
+            badge = None
+            state = "normal"
+
+            if tile.tile_key == recommended_tile:
+                badge = t["recommended_badge"]
+                state = "recommended"
+
+            elif recommended_tile and tile.tile_key in driver_tiles:
+                badge = t.get("not_recommended_badge", "Není určeno pro tento PC")
+                state = "disabled"
+
             tile.update_text(tile.base_title, tile.base_subtitle, badge=badge)
+            tile.set_driver_state(state)
 
     def open_windows_update(self):
         if is_windows():
@@ -2432,6 +2477,19 @@ exit /b 1
             TileButton[recommended="true"]:hover {{
                 background: rgba(0, 114, 198, 0.25);
                 border: 1px solid rgba(0, 114, 198, 0.45);
+            }}
+
+            TileButton[driverState="disabled"] {{
+                background: rgba(255,255,255,0.026);
+                border: 1px solid rgba(255,255,255,0.040);
+                color: rgba(255,255,255,0.34);
+                text-decoration: line-through;
+            }}
+
+            TileButton[driverState="disabled"]:hover {{
+                background: rgba(255,255,255,0.026);
+                border: 1px solid rgba(255,255,255,0.040);
+                color: rgba(255,255,255,0.34);
             }}
 
             #PcInfoCard,
