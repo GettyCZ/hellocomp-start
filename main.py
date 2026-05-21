@@ -2,6 +2,7 @@ import ctypes
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import tempfile
@@ -36,7 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 
-APP_VERSION = "2.0-beta11"
+APP_VERSION = "2.0-beta12"
 
 APP_WIDTH = 1180
 APP_HEIGHT = 760
@@ -49,6 +50,7 @@ APP_ICON = ASSETS_DIR / "hellocomp_icon.ico"
 WALLPAPER_FILE = ASSETS_DIR / "HelloCompwallpaper.png"
 
 GITHUB_RELEASES_URL = "https://github.com/GettyCZ/hellocomp-start/releases/latest"
+VERSION_MANIFEST_URL = "https://raw.githubusercontent.com/GettyCZ/hellocomp-start/main/version.json"
 
 LOGO_CANDIDATES = [
     ASSETS_DIR / "hellocomp_logo.svg",
@@ -110,6 +112,27 @@ DRIVER_NAMES = {
 }
 
 
+def is_windows():
+    return platform.system().lower() == "windows"
+
+
+def is_frozen_exe():
+    return bool(getattr(sys, "frozen", False))
+
+
+def get_settings_dir():
+    if is_windows():
+        appdata = os.environ.get("APPDATA")
+        if appdata:
+            return Path(appdata) / "HelloComp Start"
+
+    return APP_DIR
+
+
+SETTINGS_DIR = get_settings_dir()
+SETTINGS_FILE = SETTINGS_DIR / "settings.json"
+
+
 TRANSLATIONS = {
     "cz": {
         "lang_label": "CZ",
@@ -128,10 +151,24 @@ TRANSLATIONS = {
         "settings_wallpaper_text": "Nastaví připravenou HelloComp tapetu na plochu Windows.",
         "settings_wallpaper_button": "Nastavit tapetu",
         "settings_update": "Aktualizace aplikace",
-        "settings_update_text": "Otevře stránku s nejnovější verzí aplikace.",
+        "settings_update_text": "Zkontroluje, jestli je dostupná novější verze aplikace HelloComp Start.",
         "settings_update_button": "Vyhledat aktualizaci aplikace",
         "settings_about": "O aplikaci",
         "settings_about_text": f"Oficiální aplikace HelloComp Start. Verze {APP_VERSION}.",
+
+        "update_check_title": "Aktualizace aplikace",
+        "update_checking": "Kontroluji dostupnost nové verze…",
+        "update_latest_title": "Aplikace je aktuální",
+        "update_latest_text": f"Používáte nejnovější verzi aplikace HelloComp Start ({APP_VERSION}).",
+        "update_available_title": "Je dostupná nová verze",
+        "update_available_text": "Je dostupná nová verze aplikace HelloComp Start.\n\nAktuální verze: {current}\nNová verze: {latest}\n\nChcete ji stáhnout a nainstalovat?",
+        "update_download_title": "Stahuji aktualizaci",
+        "update_download_text": "Nová verze se stáhne a aplikace se poté automaticky restartuje.",
+        "update_error_title": "Aktualizace se nezdařila",
+        "update_error_text": "Aktualizaci se nepodařilo ověřit nebo stáhnout.\n\nChyba:\n{error}",
+        "update_dev_title": "Automatická aktualizace",
+        "update_dev_text": "Automatické přepsání aplikace funguje pouze ve Windows .exe verzi.\n\nTeď otevřu stránku se stažením nové verze.",
+
         "settings_wallpaper_success_title": "Tapeta nastavena",
         "settings_wallpaper_success_text": "Tapeta HelloComp byla nastavena.",
         "settings_wallpaper_missing_title": "Tapeta nenalezena",
@@ -225,10 +262,24 @@ TRANSLATIONS = {
         "settings_wallpaper_text": "Nastaví pripravenú HelloComp tapetu na plochu Windows.",
         "settings_wallpaper_button": "Nastaviť tapetu",
         "settings_update": "Aktualizácia aplikácie",
-        "settings_update_text": "Otvorí stránku s najnovšou verziou aplikácie.",
+        "settings_update_text": "Skontroluje, či je dostupná novšia verzia aplikácie HelloComp Start.",
         "settings_update_button": "Vyhľadať aktualizáciu aplikácie",
         "settings_about": "O aplikácii",
         "settings_about_text": f"Oficiálna aplikácia HelloComp Start. Verzia {APP_VERSION}.",
+
+        "update_check_title": "Aktualizácia aplikácie",
+        "update_checking": "Kontrolujem dostupnosť novej verzie…",
+        "update_latest_title": "Aplikácia je aktuálna",
+        "update_latest_text": f"Používate najnovšiu verziu aplikácie HelloComp Start ({APP_VERSION}).",
+        "update_available_title": "Je dostupná nová verzia",
+        "update_available_text": "Je dostupná nová verzia aplikácie HelloComp Start.\n\nAktuálna verzia: {current}\nNová verzia: {latest}\n\nChcete ju stiahnuť a nainštalovať?",
+        "update_download_title": "Sťahujem aktualizáciu",
+        "update_download_text": "Nová verzia sa stiahne a aplikácia sa potom automaticky reštartuje.",
+        "update_error_title": "Aktualizácia sa nepodarila",
+        "update_error_text": "Aktualizáciu sa nepodarilo overiť alebo stiahnuť.\n\nChyba:\n{error}",
+        "update_dev_title": "Automatická aktualizácia",
+        "update_dev_text": "Automatické prepísanie aplikácie funguje iba vo Windows .exe verzii.\n\nTeraz otvorím stránku na stiahnutie novej verzie.",
+
         "settings_wallpaper_success_title": "Tapeta nastavená",
         "settings_wallpaper_success_text": "Tapeta HelloComp bola nastavená.",
         "settings_wallpaper_missing_title": "Tapeta nenájdená",
@@ -307,8 +358,6 @@ TRANSLATIONS = {
 }
 
 
-# HU / EN / UA jsou záměrně namapované přes stejné klíče.
-# Kdyby některý překlad chyběl, fallback bude CZ.
 TRANSLATIONS["hu"] = {
     **TRANSLATIONS["cz"],
     "lang_label": "HU",
@@ -342,10 +391,22 @@ TRANSLATIONS["en"] = {
     "settings_wallpaper_text": "Sets the prepared HelloComp wallpaper on the Windows desktop.",
     "settings_wallpaper_button": "Set wallpaper",
     "settings_update": "Application update",
-    "settings_update_text": "Opens the page with the latest application version.",
+    "settings_update_text": "Checks whether a newer version of HelloComp Start is available.",
     "settings_update_button": "Check for application update",
     "settings_about": "About app",
     "settings_about_text": f"Official HelloComp Start application. Version {APP_VERSION}.",
+    "update_check_title": "Application update",
+    "update_checking": "Checking for a new version…",
+    "update_latest_title": "Application is up to date",
+    "update_latest_text": f"You are using the latest version of HelloComp Start ({APP_VERSION}).",
+    "update_available_title": "New version available",
+    "update_available_text": "A new version of HelloComp Start is available.\n\nCurrent version: {current}\nNew version: {latest}\n\nDo you want to download and install it?",
+    "update_download_title": "Downloading update",
+    "update_download_text": "The new version will be downloaded and the app will restart automatically.",
+    "update_error_title": "Update failed",
+    "update_error_text": "The update could not be checked or downloaded.\n\nError:\n{error}",
+    "update_dev_title": "Automatic update",
+    "update_dev_text": "Automatic replacement works only in the Windows .exe version.\n\nThe download page will now open.",
     "settings_wallpaper_success_title": "Wallpaper set",
     "settings_wallpaper_success_text": "HelloComp wallpaper has been set.",
     "settings_wallpaper_missing_title": "Wallpaper not found",
@@ -423,21 +484,6 @@ LANGUAGE_URLS = {
         "home": "https://www.hellocomp.cz/",
     },
 }
-
-def is_windows():
-    return platform.system().lower() == "windows"
-
-def get_settings_dir():
-    if is_windows():
-        appdata = os.environ.get("APPDATA")
-        if appdata:
-            return Path(appdata) / "HelloComp Start"
-
-    return APP_DIR
-
-
-SETTINGS_DIR = get_settings_dir()
-SETTINGS_FILE = SETTINGS_DIR / "settings.json"
 
 
 def load_settings():
@@ -519,6 +565,50 @@ def find_logo():
 def open_url(url):
     if url:
         webbrowser.open(url)
+
+
+def version_to_tuple(version):
+    version = str(version).strip().lower()
+    numbers = [int(x) for x in re.findall(r"\d+", version)]
+
+    while len(numbers) < 4:
+        numbers.append(0)
+
+    return tuple(numbers[:4])
+
+
+def is_newer_version(latest, current):
+    return version_to_tuple(latest) > version_to_tuple(current)
+
+
+def fetch_update_manifest():
+    request = urllib.request.Request(
+        VERSION_MANIFEST_URL,
+        headers={
+            "User-Agent": f"HelloCompStart/{APP_VERSION}",
+            "Cache-Control": "no-cache",
+        },
+    )
+
+    with urllib.request.urlopen(request, timeout=20) as response:
+        raw = response.read().decode("utf-8")
+
+    return json.loads(raw)
+
+
+def download_file(url, target_path):
+    request = urllib.request.Request(
+        url,
+        headers={"User-Agent": f"HelloCompStart/{APP_VERSION}"}
+    )
+
+    with urllib.request.urlopen(request, timeout=180) as response:
+        data = response.read()
+
+    if not data:
+        raise RuntimeError("Stažený soubor je prázdný.")
+
+    target_path.write_bytes(data)
 
 
 def run_powershell_json(command):
@@ -943,25 +1033,19 @@ class LangButton(QPushButton):
 
         elif self.language == "sk":
             stripe = h // 3
-
             painter.setBrush(QColor("#ffffff"))
             painter.drawRect(x, y, w, stripe)
-
             painter.setBrush(QColor("#0b4ea2"))
             painter.drawRect(x, y + stripe, w, stripe)
-
             painter.setBrush(QColor("#ee1c25"))
             painter.drawRect(x, y + stripe * 2, w, h - stripe * 2)
 
         elif self.language == "hu":
             stripe = h // 3
-
             painter.setBrush(QColor("#ce2939"))
             painter.drawRect(x, y, w, stripe)
-
             painter.setBrush(QColor("#ffffff"))
             painter.drawRect(x, y + stripe, w, stripe)
-
             painter.setBrush(QColor("#477050"))
             painter.drawRect(x, y + stripe * 2, w, h - stripe * 2)
 
@@ -1256,6 +1340,8 @@ class HelloCompStart(QWidget):
         self.apply_styles()
         self.update_language(self.language)
         self.load_pc_information()
+
+        QTimer.singleShot(1800, self.check_for_updates_silent)
 
     def create_header(self):
         header = QFrame()
@@ -1621,7 +1707,7 @@ class HelloCompStart(QWidget):
         self.settings_update_button.setObjectName("SettingsActionButton")
         self.settings_update_button.setCursor(Qt.PointingHandCursor)
         self.settings_update_button.setFixedHeight(36)
-        self.settings_update_button.clicked.connect(lambda: open_url(GITHUB_RELEASES_URL))
+        self.settings_update_button.clicked.connect(self.check_for_updates_manual)
 
         update_box = QFrame()
         update_box.setObjectName("SettingsCard")
@@ -1900,6 +1986,132 @@ class HelloCompStart(QWidget):
                 str(error)
             )
 
+    def check_for_updates_manual(self):
+        self.check_for_updates(manual=True)
+
+    def check_for_updates_silent(self):
+        self.check_for_updates(manual=False)
+
+    def check_for_updates(self, manual=False):
+        t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
+
+        if manual:
+            self.settings_update_button.setEnabled(False)
+            self.settings_update_button.setText(t["update_checking"])
+            QApplication.processEvents()
+
+        try:
+            manifest = fetch_update_manifest()
+            latest_version = str(manifest.get("version", "")).strip()
+            exe_url = str(manifest.get("windows_exe_url", "")).strip()
+            release_url = str(manifest.get("release_url", GITHUB_RELEASES_URL)).strip()
+
+            if not latest_version:
+                raise RuntimeError("Manifest neobsahuje položku version.")
+
+            if not is_newer_version(latest_version, APP_VERSION):
+                if manual:
+                    QMessageBox.information(
+                        self,
+                        t["update_latest_title"],
+                        t["update_latest_text"]
+                    )
+                return
+
+            reply = QMessageBox.question(
+                self,
+                t["update_available_title"],
+                t["update_available_text"].format(
+                    current=APP_VERSION,
+                    latest=latest_version,
+                ),
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes
+            )
+
+            if reply != QMessageBox.Yes:
+                return
+
+            if not is_windows() or not is_frozen_exe():
+                QMessageBox.information(
+                    self,
+                    t["update_dev_title"],
+                    t["update_dev_text"]
+                )
+                open_url(release_url or GITHUB_RELEASES_URL)
+                return
+
+            if not exe_url:
+                raise RuntimeError("Manifest neobsahuje položku windows_exe_url.")
+
+            self.download_and_install_update(exe_url, latest_version)
+
+        except Exception as error:
+            if manual:
+                QMessageBox.warning(
+                    self,
+                    t["update_error_title"],
+                    t["update_error_text"].format(error=error)
+                )
+
+        finally:
+            if manual:
+                self.settings_update_button.setEnabled(True)
+                self.settings_update_button.setText(t["settings_update_button"])
+
+    def download_and_install_update(self, exe_url, latest_version):
+        t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
+
+        QMessageBox.information(
+            self,
+            t["update_download_title"],
+            t["update_download_text"]
+        )
+
+        temp_dir = Path(tempfile.gettempdir()) / "HelloCompStartUpdate"
+        temp_dir.mkdir(parents=True, exist_ok=True)
+
+        new_exe = temp_dir / f"HelloComp_Start_{latest_version}.exe"
+        updater_bat = temp_dir / "update_hellocomp_start.bat"
+
+        current_exe = Path(sys.executable).resolve()
+
+        download_file(exe_url, new_exe)
+
+        if not new_exe.exists() or new_exe.stat().st_size < 1024 * 1024:
+            raise RuntimeError("Stažená aktualizace je příliš malá nebo poškozená.")
+
+        bat_content = f"""@echo off
+setlocal
+set "OLD_EXE={current_exe}"
+set "NEW_EXE={new_exe}"
+
+timeout /t 2 /nobreak >nul
+
+:copyloop
+copy /Y "%NEW_EXE%" "%OLD_EXE%" >nul
+if errorlevel 1 (
+    timeout /t 1 /nobreak >nul
+    goto copyloop
+)
+
+start "" "%OLD_EXE%"
+
+timeout /t 2 /nobreak >nul
+del "%NEW_EXE%" >nul 2>nul
+del "%~f0" >nul 2>nul
+endlocal
+"""
+
+        updater_bat.write_text(bat_content, encoding="utf-8")
+
+        subprocess.Popen(
+            ["cmd", "/c", str(updater_bat)],
+            creationflags=subprocess.CREATE_NEW_CONSOLE if hasattr(subprocess, "CREATE_NEW_CONSOLE") else 0,
+        )
+
+        QApplication.quit()
+
     def load_pc_information_with_feedback(self):
         t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
         original_text = t["my_pc_refresh"]
@@ -2173,7 +2385,8 @@ class HelloCompStart(QWidget):
                 border: 1px solid rgba(255,255,255,0.20);
             }}
 
-            #RefreshPcButton:disabled {{
+            #RefreshPcButton:disabled,
+            #SettingsActionButton:disabled {{
                 background: rgba(255,255,255,0.055);
                 border: 1px solid rgba(255,255,255,0.09);
                 color: rgba(255,255,255,0.58);
