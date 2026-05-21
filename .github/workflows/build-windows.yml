@@ -28,7 +28,7 @@ jobs:
         shell: cmd
         run: |
           pyinstaller --noconfirm --windowed --onefile ^
-            --name "HelloComp Start" ^
+            --name "HelloComp_Start" ^
             --icon "assets\hellocomp_icon.ico" ^
             --add-data "assets;assets" ^
             main.py
@@ -36,9 +36,15 @@ jobs:
       - name: Create ZIP package
         shell: powershell
         run: |
-          Compress-Archive -Path "dist\HelloComp Start.exe" -DestinationPath "HelloComp_Start_Windows_OneFile.zip"
+          Compress-Archive -Path "dist\HelloComp_Start.exe" -DestinationPath "HelloComp_Start_Windows_OneFile.zip"
 
-      - name: Upload artifact
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HelloComp_Start_EXE
+          path: dist/HelloComp_Start.exe
+
+      - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
           name: HelloComp_Start_Windows_OneFile
