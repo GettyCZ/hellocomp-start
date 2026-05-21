@@ -1,3 +1,4 @@
+import ctypes
 import json
 import os
 import platform
@@ -35,7 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 
-APP_VERSION = "2.0-beta10"
+APP_VERSION = "2.0-beta11"
 
 APP_WIDTH = 1180
 APP_HEIGHT = 760
@@ -45,6 +46,9 @@ BASE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
 ASSETS_DIR = BASE_DIR / "assets"
 
 APP_ICON = ASSETS_DIR / "hellocomp_icon.ico"
+WALLPAPER_FILE = ASSETS_DIR / "HelloCompwallpaper.png"
+
+GITHUB_RELEASES_URL = "https://github.com/GettyCZ/hellocomp-start/releases/latest"
 
 LOGO_CANDIDATES = [
     ASSETS_DIR / "hellocomp_logo.svg",
@@ -116,18 +120,31 @@ TRANSLATIONS = {
         "footer_social_title": "Sledujte nás",
         "recommended_badge": "Doporučeno pro tento PC",
 
+        "settings": "Nastavení",
+        "settings_title": "Nastavení aplikace",
+        "settings_subtitle": "Jazyk, tapeta, aktualizace a základní informace.",
+        "settings_language": "Jazyk aplikace",
+        "settings_wallpaper": "Tapeta HelloComp",
+        "settings_wallpaper_text": "Nastaví připravenou HelloComp tapetu na plochu Windows.",
+        "settings_wallpaper_button": "Nastavit tapetu",
+        "settings_update": "Aktualizace aplikace",
+        "settings_update_text": "Otevře stránku s nejnovější verzí aplikace.",
+        "settings_update_button": "Vyhledat aktualizaci aplikace",
+        "settings_about": "O aplikaci",
+        "settings_about_text": f"Oficiální aplikace HelloComp Start. Verze {APP_VERSION}.",
+        "settings_wallpaper_success_title": "Tapeta nastavena",
+        "settings_wallpaper_success_text": "Tapeta HelloComp byla nastavena.",
+        "settings_wallpaper_missing_title": "Tapeta nenalezena",
+        "settings_wallpaper_missing_text": "Soubor assets/HelloCompwallpaper.png nebyl nalezen.",
+        "settings_wallpaper_windows_only_title": "Tapeta",
+        "settings_wallpaper_windows_only_text": "Automatické nastavení tapety je dostupné ve Windows verzi aplikace.",
+
         "wrong_driver_title": "Tento ovladač není doporučený",
         "wrong_driver_text": "Aplikace detekovala grafickou kartu {detected}. Pro tento počítač je doporučený ovladač {recommended}.\n\nChcete i přesto otevřít stránku {selected}?",
         "gpu_unknown_title": "Grafická karta nebyla jednoznačně rozpoznána",
         "gpu_unknown_text": "Aplikace nedokázala jednoznačně určit výrobce grafické karty. Otevřete pouze ovladač, který odpovídá vaší grafické kartě.",
 
-        "menu": [
-            "Můj počítač",
-            "První kroky",
-            "Podpora",
-            "Aplikace",
-            "Servis",
-        ],
+        "menu": ["Můj počítač", "První kroky", "Podpora", "Aplikace", "Servis"],
 
         "my_pc_title": "Můj počítač",
         "my_pc_text": "Přehled hlavních parametrů sestavy. Detailní hardwarové údaje se načtou automaticky ve Windows.",
@@ -200,18 +217,31 @@ TRANSLATIONS = {
         "footer_social_title": "Sledujte nás",
         "recommended_badge": "Odporúčané pre tento PC",
 
+        "settings": "Nastavenia",
+        "settings_title": "Nastavenia aplikácie",
+        "settings_subtitle": "Jazyk, tapeta, aktualizácie a základné informácie.",
+        "settings_language": "Jazyk aplikácie",
+        "settings_wallpaper": "Tapeta HelloComp",
+        "settings_wallpaper_text": "Nastaví pripravenú HelloComp tapetu na plochu Windows.",
+        "settings_wallpaper_button": "Nastaviť tapetu",
+        "settings_update": "Aktualizácia aplikácie",
+        "settings_update_text": "Otvorí stránku s najnovšou verziou aplikácie.",
+        "settings_update_button": "Vyhľadať aktualizáciu aplikácie",
+        "settings_about": "O aplikácii",
+        "settings_about_text": f"Oficiálna aplikácia HelloComp Start. Verzia {APP_VERSION}.",
+        "settings_wallpaper_success_title": "Tapeta nastavená",
+        "settings_wallpaper_success_text": "Tapeta HelloComp bola nastavená.",
+        "settings_wallpaper_missing_title": "Tapeta nenájdená",
+        "settings_wallpaper_missing_text": "Súbor assets/HelloCompwallpaper.png nebol nájdený.",
+        "settings_wallpaper_windows_only_title": "Tapeta",
+        "settings_wallpaper_windows_only_text": "Automatické nastavenie tapety je dostupné vo Windows verzii aplikácie.",
+
         "wrong_driver_title": "Tento ovládač nie je odporúčaný",
         "wrong_driver_text": "Aplikácia detegovala grafickú kartu {detected}. Pre tento počítač je odporúčaný ovládač {recommended}.\n\nChcete aj napriek tomu otvoriť stránku {selected}?",
         "gpu_unknown_title": "Grafická karta nebola jednoznačne rozpoznaná",
         "gpu_unknown_text": "Aplikácia nedokázala jednoznačne určiť výrobcu grafickej karty. Otvorte iba ovládač, ktorý zodpovedá vašej grafickej karte.",
 
-        "menu": [
-            "Môj počítač",
-            "Prvé kroky",
-            "Podpora",
-            "Aplikácie",
-            "Servis",
-        ],
+        "menu": ["Môj počítač", "Prvé kroky", "Podpora", "Aplikácie", "Servis"],
 
         "my_pc_title": "Môj počítač",
         "my_pc_text": "Prehľad hlavných parametrov zostavy. Detailné hardvérové údaje sa načítajú automaticky vo Windows.",
@@ -274,90 +304,95 @@ TRANSLATIONS = {
         "install_error_title": "Inštalácia {name}",
         "install_error_text": "Inštalátor sa nepodarilo stiahnuť alebo spustiť.\n\nOtvorím oficiálnu stránku na stiahnutie.\n\nChyba:\n{error}",
     },
+}
 
-    "hu": {
-        "lang_label": "HU",
-        "window_title": "HelloComp Start",
-        "header_title": "Saját HelloComp számítógépem",
-        "header_subtitle": "Gyors kezdés, ajánlott alkalmazások, támogatás és szerviz egy helyen.",
-        "footer": f"HelloComp.cz © 2026  |  verzió {APP_VERSION}",
-        "footer_social_title": "Kövessen minket",
-        "recommended_badge": "Ajánlott ehhez a PC-hez",
 
-        "wrong_driver_title": "Ez az illesztőprogram nem ajánlott",
-        "wrong_driver_text": "Az alkalmazás {detected} grafikus kártyát észlelt. Ehhez a számítógéphez a(z) {recommended} ajánlott.\n\nEnnek ellenére megnyitja a(z) {selected} oldalt?",
-        "gpu_unknown_title": "A grafikus kártya nem azonosítható egyértelműen",
-        "gpu_unknown_text": "Az alkalmazás nem tudta egyértelműen meghatározni a grafikus kártya gyártóját. Csak a saját grafikus kártyájának megfelelő illesztőprogramot nyissa meg.",
+# HU / EN / UA jsou záměrně namapované přes stejné klíče.
+# Kdyby některý překlad chyběl, fallback bude CZ.
+TRANSLATIONS["hu"] = {
+    **TRANSLATIONS["cz"],
+    "lang_label": "HU",
+    "footer": f"HelloComp.cz © 2026  |  verzió {APP_VERSION}",
+    "header_title": "Saját HelloComp számítógépem",
+    "header_subtitle": "Gyors kezdés, ajánlott alkalmazások, támogatás és szerviz egy helyen.",
+    "settings": "Beállítások",
+    "settings_title": "Alkalmazás beállításai",
+    "settings_subtitle": "Nyelv, háttérkép, frissítések és alapinformációk.",
+    "settings_language": "Alkalmazás nyelve",
+    "settings_wallpaper_button": "Háttérkép beállítása",
+    "settings_update_button": "Alkalmazásfrissítés keresése",
+    "menu": ["Saját gépem", "Első lépések", "Támogatás", "Alkalmazások", "Szerviz"],
+    "my_pc_title": "Saját gépem",
+    "support_title": "HelloComp támogatás",
+    "software_title": "Ajánlott alkalmazások",
+    "service_title": "Szerviz és reklamáció",
+}
 
-        "menu": [
-            "Saját gépem",
-            "Első lépések",
-            "Támogatás",
-            "Alkalmazások",
-            "Szerviz",
-        ],
-
-        "my_pc_title": "Saját gépem",
-        "my_pc_text": "A számítógép fő paramétereinek áttekintése. A részletes hardveradatok Windows alatt automatikusan betöltődnek.",
-        "my_pc_refresh": "Újratöltés",
-        "my_pc_loading": "Betöltés…",
-        "my_pc_windows_only": "A részletes információk automatikusan betöltődnek a Windows verzióban.",
-
-        "pc_fields": {
-            "manufacturer": "Gyártó",
-            "cpu": "Processzor",
-            "gpu": "Grafikus kártya",
-            "ram": "Memória",
-            "drives": "Meghajtók",
-            "baseboard": "Alaplap",
-        },
-
-        "first_steps_title": "Első lépések",
-        "first_steps_text": "Ajánlott lépések a számítógép első indítása után.",
-        "first_steps_tiles": [
-            ("📘 Használati útmutató", "Alapvető információk az első indítás után"),
-            ("🪟 Windows aktiválása", "A Windows aktiválásának ellenőrzése"),
-            ("⚙️ Ajánlott beállítások", "Tippek a stabil működéshez"),
-        ],
-
-        "support_title": "HelloComp támogatás",
-        "support_text": "Gyors segítség, kapcsolat és válaszok a gyakori kérdésekre.",
-        "support_tiles": [
-            ("☎️ Kapcsolat", "HelloComp kapcsolat oldal megnyitása"),
-            ("✉️ E-mail írása", "info@hellocomp.cz"),
-            ("❔ Gyakori kérdések", "GYIK és válaszok a gyakori kérdésekre"),
-        ],
-
-        "software_title": "Ajánlott alkalmazások",
-        "software_text": "Alkalmazások játékhoz, kommunikációhoz, illesztőprogramokhoz, PC-kezeléshez és stabilitásteszthez.",
-        "software_tiles": [
-            ("🎮 Steam", "Telepítő letöltése és indítása"),
-            ("💬 Discord", "Telepítő letöltése és indítása"),
-            ("🕹️ Epic Games", "Letöltési oldal megnyitása"),
-            ("🧪 OCCT", "CPU, GPU, RAM és tápegység stabilitásteszt"),
-            ("🟢 nVidia App", "Hivatalos nVidia alkalmazás és illesztőprogramok"),
-            ("🔴 AMD Adrenalin", "Hivatalos AMD alkalmazás és illesztőprogramok"),
-            ("🔵 Intel Graphics", "Intel ARC / Iris Xe illesztőprogramok"),
-            ("🔄 Windows Update", "Rendszerfrissítések keresésének indítása"),
-        ],
-
-        "service_title": "Szerviz és reklamáció",
-        "service_text": "Gyors hivatkozások szervizhez, reklamációhoz vagy biztonságos PC küldéshez.",
-        "service_tiles": [
-            ("🧾 Reklamáció", "Információk a reklamációhoz"),
-            ("🛠️ Számítógép szerviz", "Segítség javításhoz vagy karbantartáshoz"),
-            ("📦 PC biztonságos küldése", "Hogyan csomagolja be helyesen"),
-        ],
-
-        "already_installed_title": "A(z) {name} már telepítve van",
-        "already_installed_text": "A(z) {name} alkalmazás már telepítve van a számítógépen.",
-        "install_title": "{name} telepítése",
-        "install_question": "Az alkalmazás letölti és elindítja a(z) {name} hivatalos telepítőjét.\n\nFolytatja?",
-        "download_title": "{name} letöltése",
-        "download_text": "A(z) {name} telepítője letöltődik.\nA letöltés után automatikusan elindul.",
-        "install_error_title": "{name} telepítése",
-        "install_error_text": "A telepítőt nem sikerült letölteni vagy elindítani.\n\nMegnyitom a hivatalos letöltési oldalt.\n\nHiba:\n{error}",
+TRANSLATIONS["en"] = {
+    **TRANSLATIONS["cz"],
+    "lang_label": "EN",
+    "footer": f"HelloComp.cz © 2026  |  version {APP_VERSION}",
+    "header_title": "My HelloComp Computer",
+    "header_subtitle": "Quick start, recommended apps, support and service in one place.",
+    "settings": "Settings",
+    "settings_title": "Application settings",
+    "settings_subtitle": "Language, wallpaper, updates and basic information.",
+    "settings_language": "Application language",
+    "settings_wallpaper": "HelloComp wallpaper",
+    "settings_wallpaper_text": "Sets the prepared HelloComp wallpaper on the Windows desktop.",
+    "settings_wallpaper_button": "Set wallpaper",
+    "settings_update": "Application update",
+    "settings_update_text": "Opens the page with the latest application version.",
+    "settings_update_button": "Check for application update",
+    "settings_about": "About app",
+    "settings_about_text": f"Official HelloComp Start application. Version {APP_VERSION}.",
+    "settings_wallpaper_success_title": "Wallpaper set",
+    "settings_wallpaper_success_text": "HelloComp wallpaper has been set.",
+    "settings_wallpaper_missing_title": "Wallpaper not found",
+    "settings_wallpaper_missing_text": "File assets/HelloCompwallpaper.png was not found.",
+    "settings_wallpaper_windows_only_title": "Wallpaper",
+    "settings_wallpaper_windows_only_text": "Automatic wallpaper setup is available in the Windows version of the app.",
+    "recommended_badge": "Recommended for this PC",
+    "menu": ["My PC", "First steps", "Support", "Apps", "Service"],
+    "my_pc_title": "My PC",
+    "my_pc_text": "Overview of the main PC parameters. Detailed hardware information is loaded automatically on Windows.",
+    "my_pc_refresh": "Reload",
+    "my_pc_loading": "Loading…",
+    "my_pc_windows_only": "Detailed information is loaded automatically in the Windows version of the app.",
+    "pc_fields": {
+        "manufacturer": "Manufacturer",
+        "cpu": "Processor",
+        "gpu": "Graphics card",
+        "ram": "Memory",
+        "drives": "Drives",
+        "baseboard": "Motherboard",
     },
+    "first_steps_title": "First steps",
+    "first_steps_text": "Recommended steps after the first computer start.",
+    "support_title": "HelloComp support",
+    "support_text": "Quick help, contact and answers to frequently asked questions.",
+    "software_title": "Recommended apps",
+    "software_text": "Apps for gaming, communication, drivers, PC management and basic stability testing.",
+    "service_title": "Service and warranty",
+    "service_text": "Quick links for service, warranty claim or safe PC shipping.",
+}
+
+TRANSLATIONS["ua"] = {
+    **TRANSLATIONS["en"],
+    "lang_label": "UA",
+    "footer": f"HelloComp.cz © 2026  |  версія {APP_VERSION}",
+    "header_title": "Мій комп’ютер HelloComp",
+    "header_subtitle": "Швидкий старт, рекомендовані програми, підтримка та сервіс в одному місці.",
+    "settings": "Налаштування",
+    "settings_title": "Налаштування програми",
+    "settings_language": "Мова програми",
+    "settings_wallpaper_button": "Встановити шпалери",
+    "settings_update_button": "Перевірити оновлення програми",
+    "menu": ["Мій ПК", "Перші кроки", "Підтримка", "Програми", "Сервіс"],
+    "my_pc_title": "Мій ПК",
+    "support_title": "Підтримка HelloComp",
+    "software_title": "Рекомендовані програми",
+    "service_title": "Сервіс",
 }
 
 
@@ -377,7 +412,50 @@ LANGUAGE_URLS = {
         "faq": "https://www.hellocomp.cz/hu/gyakran-ismetelt-kerdesek--gyik/",
         "home": "https://www.hellocomp.cz/hu/",
     },
+    "en": {
+        "contact": "https://www.hellocomp.cz/kontakt/",
+        "faq": "https://www.hellocomp.cz/casto-kladene-otazky--faq/",
+        "home": "https://www.hellocomp.cz/",
+    },
+    "ua": {
+        "contact": "https://www.hellocomp.cz/kontakt/",
+        "faq": "https://www.hellocomp.cz/casto-kladene-otazky--faq/",
+        "home": "https://www.hellocomp.cz/",
+    },
 }
+
+def is_windows():
+    return platform.system().lower() == "windows"
+
+def get_settings_dir():
+    if is_windows():
+        appdata = os.environ.get("APPDATA")
+        if appdata:
+            return Path(appdata) / "HelloComp Start"
+
+    return APP_DIR
+
+
+SETTINGS_DIR = get_settings_dir()
+SETTINGS_FILE = SETTINGS_DIR / "settings.json"
+
+
+def load_settings():
+    try:
+        if SETTINGS_FILE.exists():
+            return json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+
+    return {}
+
+
+def save_settings(settings):
+    try:
+        SETTINGS_DIR.mkdir(parents=True, exist_ok=True)
+        SETTINGS_FILE.write_text(json.dumps(settings, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as error:
+        print(f"⚠️ Nastavení se nepodařilo uložit: {error}")
 
 
 def find_first_existing(paths):
@@ -436,10 +514,6 @@ def find_logo():
 
     print("⚠️ Logo nenalezeno.")
     return None
-
-
-def is_windows():
-    return platform.system().lower() == "windows"
 
 
 def open_url(url):
@@ -548,7 +622,7 @@ def get_pc_info(language):
     if is_windows():
         return get_windows_pc_info()
 
-    t = TRANSLATIONS[language]
+    t = TRANSLATIONS.get(language, TRANSLATIONS["cz"])
 
     return {
         "manufacturer": "HelloComp",
@@ -616,7 +690,7 @@ def check_installed_app(installer_key):
 
 
 def download_and_run_installer(parent, installer_key, language):
-    t = TRANSLATIONS[language]
+    t = TRANSLATIONS.get(language, TRANSLATIONS["cz"])
     installer = SOFTWARE_INSTALLERS.get(installer_key)
 
     if not installer:
@@ -657,9 +731,7 @@ def download_and_run_installer(parent, installer_key, language):
 
         request = urllib.request.Request(
             installer["url"],
-            headers={
-                "User-Agent": f"Mozilla/5.0 HelloCompStart/{APP_VERSION}"
-            }
+            headers={"User-Agent": f"Mozilla/5.0 HelloCompStart/{APP_VERSION}"}
         )
 
         QMessageBox.information(
@@ -893,6 +965,58 @@ class LangButton(QPushButton):
             painter.setBrush(QColor("#477050"))
             painter.drawRect(x, y + stripe * 2, w, h - stripe * 2)
 
+        elif self.language == "en":
+            painter.setBrush(QColor("#012169"))
+            painter.drawRect(x, y, w, h)
+            painter.setBrush(QColor("#ffffff"))
+            painter.drawRect(x, y + 5, w, 2)
+            painter.drawRect(x + 8, y, 2, h)
+            painter.setBrush(QColor("#c8102e"))
+            painter.drawRect(x, y + 5, w, 1)
+            painter.drawRect(x + 8, y, 1, h)
+
+        elif self.language == "ua":
+            painter.setBrush(QColor("#0057b7"))
+            painter.drawRect(x, y, w, h // 2)
+            painter.setBrush(QColor("#ffd700"))
+            painter.drawRect(x, y + h // 2, w, h - h // 2)
+
+
+class SettingsButton(QPushButton):
+    def __init__(self):
+        super().__init__("⚙")
+        self.setCursor(Qt.PointingHandCursor)
+        self.setFixedSize(38, 31)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.TextAntialiasing, True)
+
+        rect = self.rect().adjusted(1, 1, -1, -1)
+
+        if self.isChecked():
+            bg = QColor(255, 255, 255, 44)
+            border = QColor(255, 255, 255, 92)
+        elif self.underMouse():
+            bg = QColor(255, 255, 255, 28)
+            border = QColor(255, 255, 255, 60)
+        else:
+            bg = QColor(255, 255, 255, 16)
+            border = QColor(255, 255, 255, 34)
+
+        painter.setPen(QPen(border, 1))
+        painter.setBrush(bg)
+        painter.drawRoundedRect(rect, 9, 9)
+
+        painter.setPen(QColor("#ffffff"))
+        font = QFont(self.font())
+        font.setPixelSize(17)
+        painter.setFont(font)
+        painter.drawText(rect, Qt.AlignCenter, self.text())
+
+        painter.end()
+
 
 class SocialButton(QPushButton):
     ICONS = {
@@ -1072,7 +1196,12 @@ class HelloCompStart(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.language = "cz"
+        self.settings = load_settings()
+        self.language = self.settings.get("language", "cz")
+
+        if self.language not in TRANSLATIONS:
+            self.language = "cz"
+
         self.pc_info = {}
         self.gpu_vendor = None
 
@@ -1112,6 +1241,7 @@ class HelloCompStart(QWidget):
         self.pages.addWidget(self.create_support_page())
         self.pages.addWidget(self.create_software_page())
         self.pages.addWidget(self.create_service_page())
+        self.pages.addWidget(self.create_settings_page())
 
         main_layout.addWidget(header)
         main_layout.addWidget(menu_wrap)
@@ -1124,7 +1254,7 @@ class HelloCompStart(QWidget):
 
         self.set_active_menu(0)
         self.apply_styles()
-        self.update_language("cz")
+        self.update_language(self.language)
         self.load_pc_information()
 
     def create_header(self):
@@ -1164,19 +1294,17 @@ class HelloCompStart(QWidget):
         right.setContentsMargins(0, 0, 0, 0)
         right.setSpacing(10)
 
-        lang_row = QWidget()
-        lang_row.setObjectName("LangRow")
+        settings_row = QWidget()
+        settings_row.setObjectName("LangRow")
 
-        lang_layout = QHBoxLayout(lang_row)
-        lang_layout.setContentsMargins(0, 0, 0, 0)
-        lang_layout.setSpacing(7)
-        lang_layout.addStretch()
+        settings_layout = QHBoxLayout(settings_row)
+        settings_layout.setContentsMargins(0, 0, 0, 0)
+        settings_layout.setSpacing(7)
+        settings_layout.addStretch()
 
-        for language in ["cz", "sk", "hu"]:
-            btn = LangButton(TRANSLATIONS[language]["lang_label"], language)
-            btn.clicked.connect(lambda checked=False, lang=language: self.update_language(lang))
-            self.lang_buttons.append(btn)
-            lang_layout.addWidget(btn)
+        self.settings_button = SettingsButton()
+        self.settings_button.clicked.connect(lambda: self.set_active_menu(5))
+        settings_layout.addWidget(self.settings_button)
 
         logo_holder = QWidget()
         logo_holder.setObjectName("LogoHolder")
@@ -1211,7 +1339,7 @@ class HelloCompStart(QWidget):
             logo.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
             logo_layout.addWidget(logo)
 
-        right.addWidget(lang_row)
+        right.addWidget(settings_row)
         right.addWidget(logo_holder, alignment=Qt.AlignRight)
 
         layout.addWidget(left_widget, 1)
@@ -1298,6 +1426,9 @@ class HelloCompStart(QWidget):
 
         for i, btn in enumerate(self.menu_buttons):
             btn.setChecked(i == index)
+
+        if hasattr(self, "settings_button"):
+            self.settings_button.setChecked(index == 5)
 
     def create_my_pc_page(self):
         page = self.create_page_base("my_pc")
@@ -1399,6 +1530,133 @@ class HelloCompStart(QWidget):
         ])
         page.layout().addWidget(tiles)
         page.layout().addStretch()
+        return page
+
+    def create_settings_page(self):
+        page = QWidget()
+        page.setObjectName("Page")
+
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 26, 30, 26)
+        layout.setSpacing(13)
+
+        title_label = QLabel()
+        title_label.setObjectName("PageTitle")
+
+        text_label = QLabel()
+        text_label.setObjectName("PageText")
+        text_label.setWordWrap(True)
+
+        layout.addWidget(title_label)
+        layout.addWidget(text_label)
+
+        self.page_labels["settings_page"] = {
+            "title": title_label,
+            "text": text_label,
+        }
+
+        settings_grid = QGridLayout()
+        settings_grid.setContentsMargins(0, 18, 0, 0)
+        settings_grid.setHorizontalSpacing(14)
+        settings_grid.setVerticalSpacing(12)
+
+        self.settings_language_title = QLabel()
+        self.settings_language_title.setObjectName("SettingsSectionTitle")
+
+        language_box = QFrame()
+        language_box.setObjectName("SettingsCard")
+
+        language_layout = QVBoxLayout(language_box)
+        language_layout.setContentsMargins(16, 14, 16, 14)
+        language_layout.setSpacing(12)
+        language_layout.addWidget(self.settings_language_title)
+
+        lang_row = QWidget()
+        lang_row_layout = QHBoxLayout(lang_row)
+        lang_row_layout.setContentsMargins(0, 0, 0, 0)
+        lang_row_layout.setSpacing(8)
+
+        self.settings_lang_buttons = []
+
+        for language in ["cz", "sk", "hu", "en", "ua"]:
+            btn = LangButton(TRANSLATIONS[language]["lang_label"], language)
+            btn.clicked.connect(lambda checked=False, lang=language: self.update_language(lang))
+            self.settings_lang_buttons.append(btn)
+            lang_row_layout.addWidget(btn)
+
+        lang_row_layout.addStretch()
+        language_layout.addWidget(lang_row)
+
+        self.settings_wallpaper_title = QLabel()
+        self.settings_wallpaper_title.setObjectName("SettingsSectionTitle")
+
+        self.settings_wallpaper_text = QLabel()
+        self.settings_wallpaper_text.setObjectName("SettingsText")
+        self.settings_wallpaper_text.setWordWrap(True)
+
+        self.settings_wallpaper_button = QPushButton()
+        self.settings_wallpaper_button.setObjectName("SettingsActionButton")
+        self.settings_wallpaper_button.setCursor(Qt.PointingHandCursor)
+        self.settings_wallpaper_button.setFixedHeight(36)
+        self.settings_wallpaper_button.clicked.connect(self.set_hellocomp_wallpaper)
+
+        wallpaper_box = QFrame()
+        wallpaper_box.setObjectName("SettingsCard")
+
+        wallpaper_layout = QVBoxLayout(wallpaper_box)
+        wallpaper_layout.setContentsMargins(16, 14, 16, 14)
+        wallpaper_layout.setSpacing(10)
+        wallpaper_layout.addWidget(self.settings_wallpaper_title)
+        wallpaper_layout.addWidget(self.settings_wallpaper_text)
+        wallpaper_layout.addWidget(self.settings_wallpaper_button, alignment=Qt.AlignLeft)
+
+        self.settings_update_title = QLabel()
+        self.settings_update_title.setObjectName("SettingsSectionTitle")
+
+        self.settings_update_text = QLabel()
+        self.settings_update_text.setObjectName("SettingsText")
+        self.settings_update_text.setWordWrap(True)
+
+        self.settings_update_button = QPushButton()
+        self.settings_update_button.setObjectName("SettingsActionButton")
+        self.settings_update_button.setCursor(Qt.PointingHandCursor)
+        self.settings_update_button.setFixedHeight(36)
+        self.settings_update_button.clicked.connect(lambda: open_url(GITHUB_RELEASES_URL))
+
+        update_box = QFrame()
+        update_box.setObjectName("SettingsCard")
+
+        update_layout = QVBoxLayout(update_box)
+        update_layout.setContentsMargins(16, 14, 16, 14)
+        update_layout.setSpacing(10)
+        update_layout.addWidget(self.settings_update_title)
+        update_layout.addWidget(self.settings_update_text)
+        update_layout.addWidget(self.settings_update_button, alignment=Qt.AlignLeft)
+
+        self.settings_about_title = QLabel()
+        self.settings_about_title.setObjectName("SettingsSectionTitle")
+
+        self.settings_about_text = QLabel()
+        self.settings_about_text.setObjectName("SettingsText")
+        self.settings_about_text.setWordWrap(True)
+
+        about_box = QFrame()
+        about_box.setObjectName("SettingsCard")
+
+        about_layout = QVBoxLayout(about_box)
+        about_layout.setContentsMargins(16, 14, 16, 14)
+        about_layout.setSpacing(10)
+        about_layout.addWidget(self.settings_about_title)
+        about_layout.addWidget(self.settings_about_text)
+
+        settings_grid.addWidget(language_box, 0, 0, 1, 2)
+        settings_grid.addWidget(wallpaper_box, 1, 0)
+        settings_grid.addWidget(update_box, 1, 1)
+        settings_grid.addWidget(about_box, 2, 0, 1, 2)
+
+        layout.addLayout(settings_grid)
+        layout.addStretch()
+
         return page
 
     def create_page_base(self, key):
@@ -1522,7 +1780,7 @@ class HelloCompStart(QWidget):
                 tile.url = software_urls[tile.tile_key]
 
     def should_open_driver(self, selected_vendor):
-        t = TRANSLATIONS[self.language]
+        t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
 
         if self.gpu_vendor is None:
             QMessageBox.information(
@@ -1554,7 +1812,7 @@ class HelloCompStart(QWidget):
         return reply == QMessageBox.Yes
 
     def apply_gpu_recommendations(self):
-        t = TRANSLATIONS[self.language]
+        t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
         recommended_tile = None
 
         if self.gpu_vendor == "nvidia":
@@ -1598,8 +1856,52 @@ class HelloCompStart(QWidget):
 
         webbrowser.open("https://support.microsoft.com/windows")
 
+    def set_hellocomp_wallpaper(self):
+        t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
+
+        if not WALLPAPER_FILE.exists():
+            QMessageBox.warning(
+                self,
+                t["settings_wallpaper_missing_title"],
+                t["settings_wallpaper_missing_text"]
+            )
+            return
+
+        if not is_windows():
+            QMessageBox.information(
+                self,
+                t["settings_wallpaper_windows_only_title"],
+                t["settings_wallpaper_windows_only_text"]
+            )
+            return
+
+        try:
+            SPI_SETDESKWALLPAPER = 20
+            SPIF_UPDATEINIFILE = 1
+            SPIF_SENDCHANGE = 2
+
+            ctypes.windll.user32.SystemParametersInfoW(
+                SPI_SETDESKWALLPAPER,
+                0,
+                str(WALLPAPER_FILE),
+                SPIF_UPDATEINIFILE | SPIF_SENDCHANGE
+            )
+
+            QMessageBox.information(
+                self,
+                t["settings_wallpaper_success_title"],
+                t["settings_wallpaper_success_text"]
+            )
+
+        except Exception as error:
+            QMessageBox.warning(
+                self,
+                t["settings_wallpaper_missing_title"],
+                str(error)
+            )
+
     def load_pc_information_with_feedback(self):
-        t = TRANSLATIONS[self.language]
+        t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
         original_text = t["my_pc_refresh"]
 
         self.refresh_pc_button.setEnabled(False)
@@ -1615,7 +1917,7 @@ class HelloCompStart(QWidget):
         self.refresh_pc_button.setEnabled(True)
 
     def load_pc_information(self):
-        t = TRANSLATIONS[self.language]
+        t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
 
         try:
             info = get_pc_info(self.language)
@@ -1635,8 +1937,14 @@ class HelloCompStart(QWidget):
         self.apply_gpu_recommendations()
 
     def update_language(self, language):
+        if language not in TRANSLATIONS:
+            language = "cz"
+
         self.language = language
-        t = TRANSLATIONS[language]
+        self.settings["language"] = language
+        save_settings(self.settings)
+
+        t = TRANSLATIONS.get(language, TRANSLATIONS["cz"])
 
         self.setWindowTitle(t["window_title"])
         self.header_title.setText(t["header_title"])
@@ -1648,9 +1956,10 @@ class HelloCompStart(QWidget):
         for index, text in enumerate(t["menu"]):
             self.menu_buttons[index].setText(text)
 
-        for btn in self.lang_buttons:
-            btn.setChecked(btn.language == language)
-            btn.update()
+        if hasattr(self, "settings_lang_buttons"):
+            for btn in self.settings_lang_buttons:
+                btn.setChecked(btn.language == language)
+                btn.update()
 
         page_keys = ["my_pc", "first_steps", "support", "software", "service"]
 
@@ -1665,6 +1974,21 @@ class HelloCompStart(QWidget):
                 for tile, (title, subtitle) in zip(tiles, tiles_texts):
                     tile.update_text(title, subtitle)
                     tile.set_language(language)
+
+        self.page_labels["settings_page"]["title"].setText(t["settings_title"])
+        self.page_labels["settings_page"]["text"].setText(t["settings_subtitle"])
+
+        self.settings_language_title.setText(t["settings_language"])
+        self.settings_wallpaper_title.setText(t["settings_wallpaper"])
+        self.settings_wallpaper_text.setText(t["settings_wallpaper_text"])
+        self.settings_wallpaper_button.setText(t["settings_wallpaper_button"])
+
+        self.settings_update_title.setText(t["settings_update"])
+        self.settings_update_text.setText(t["settings_update_text"])
+        self.settings_update_button.setText(t["settings_update_button"])
+
+        self.settings_about_title.setText(t["settings_about"])
+        self.settings_about_text.setText(t["settings_about_text"])
 
         for key, card in self.pc_cards.items():
             card.title_label.setText(t["pc_fields"].get(key, key))
@@ -1808,21 +2132,24 @@ class HelloCompStart(QWidget):
                 border: 1px solid rgba(0, 114, 198, 0.45);
             }}
 
-            #PcInfoCard {{
+            #PcInfoCard,
+            #SettingsCard {{
                 background: rgba(255,255,255,0.052);
                 border: 1px solid rgba(255,255,255,0.065);
                 border-radius: 13px;
             }}
 
-            #PcInfoTitle {{
+            #PcInfoTitle,
+            #SettingsSectionTitle {{
                 background: transparent;
                 color: rgba(255,255,255,0.56);
-                font-size: 11px;
+                font-size: 12px;
                 font-weight: 400;
                 letter-spacing: 0.025em;
             }}
 
-            #PcInfoValue {{
+            #PcInfoValue,
+            #SettingsText {{
                 background: transparent;
                 color: #ffffff;
                 font-size: 12px;
@@ -1830,7 +2157,8 @@ class HelloCompStart(QWidget):
                 line-height: 1.25;
             }}
 
-            #RefreshPcButton {{
+            #RefreshPcButton,
+            #SettingsActionButton {{
                 background: rgba(255,255,255,0.09);
                 border: 1px solid rgba(255,255,255,0.13);
                 border-radius: 10px;
@@ -1839,7 +2167,8 @@ class HelloCompStart(QWidget):
                 font-size: 13px;
             }}
 
-            #RefreshPcButton:hover {{
+            #RefreshPcButton:hover,
+            #SettingsActionButton:hover {{
                 background: rgba(255,255,255,0.14);
                 border: 1px solid rgba(255,255,255,0.20);
             }}
