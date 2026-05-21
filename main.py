@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+import ssl
 import webbrowser
 from pathlib import Path
 
@@ -37,7 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 
-APP_VERSION = "2.1-beta2.5"
+APP_VERSION = "2.1-beta2.6"
 
 APP_WIDTH = 1180
 APP_HEIGHT = 760
@@ -51,6 +52,13 @@ WALLPAPER_FILE = ASSETS_DIR / "HelloCompwallpaper.png"
 
 GITHUB_RELEASES_URL = "https://github.com/GettyCZ/hellocomp-start/releases/latest"
 VERSION_MANIFEST_URL = "https://github.com/GettyCZ/hellocomp-start/releases/latest/download/version.json"
+
+def get_https_context():
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
 
 LOGO_CANDIDATES = [
     ASSETS_DIR / "hellocomp_logo.svg",
@@ -595,7 +603,7 @@ def fetch_update_manifest():
         },
     )
 
-    with urllib.request.urlopen(request, timeout=20) as response:
+    with urllib.request.urlopen(request, timeout=20, context=get_https_context()) as response:
         raw = response.read().decode("utf-8")
 
     return json.loads(raw)
@@ -607,7 +615,7 @@ def download_file(url, target_path):
         headers={"User-Agent": f"HelloCompStart/{APP_VERSION}"}
     )
 
-    with urllib.request.urlopen(request, timeout=180) as response:
+    with urllib.request.urlopen(request, timeout=180, context=get_https_context()) as response:
         data = response.read()
 
     if not data:
