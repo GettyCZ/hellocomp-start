@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 
-APP_VERSION = "2.0-beta13"
+APP_VERSION = "2.1-beta1"
 
 APP_WIDTH = 1180
 APP_HEIGHT = 760
@@ -1971,27 +1971,43 @@ class HelloCompStart(QWidget):
 
     def open_windows_update(self):
         if is_windows():
-            try:
-                subprocess.Popen(
-                    ["UsoClient.exe", "StartScan"],
-                    shell=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
-            except Exception:
-                pass
+            # Pokus o okamžité spuštění vyhledávání aktualizací.
+            # Windows si některé příkazy může řídit sám podle verze systému,
+            # proto pouštíme více bezpečných metod a pak otevřeme stránku Windows Update.
+            commands = [
+                ["UsoClient.exe", "StartInteractiveScan"],
+                ["UsoClient.exe", "StartScan"],
+                [
+                    "powershell",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-Command",
+                    "try { (New-Object -ComObject Microsoft.Update.AutoUpdate).DetectNow() } catch {}"
+                ],
+            ]
 
-            try:
-                os.startfile("ms-settings:windowsupdate-action")
-                return
-            except Exception:
-                pass
+            for command in commands:
+                try:
+                    subprocess.Popen(
+                        command,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                    )
+                except Exception:
+                    pass
 
-            try:
-                os.startfile("ms-settings:windowsupdate")
-                return
-            except Exception:
-                pass
+            # Otevře rovnou stránku Windows Update / akce aktualizací.
+            for uri in [
+                "ms-settings:windowsupdate-action",
+                "ms-settings:windowsupdate",
+            ]:
+                try:
+                    os.startfile(uri)
+                    return
+                except Exception:
+                    pass
 
         webbrowser.open("https://support.microsoft.com/windows")
 
