@@ -1,6 +1,6 @@
 {
   "version": "2.0-beta12",
-  "windows_exe_url": "https://github.com/GettyCZ/hellocomp-start-updates/releases/latest/download/HelloComp_Start.exe",
-  "release_url": "https://github.com/GettyCZ/hellocomp-start-updates/releases/latest",
+  "windows_exe_url": "https://github.com/GettyCZ/hellocomp-start/releases/latest/download/HelloComp_Start.exe",
+  "release_url": "https://github.com/GettyCZ/hellocomp-start/releases/latest",
   "notes": "Nová verze aplikace HelloComp Start."
 }

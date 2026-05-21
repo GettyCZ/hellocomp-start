@@ -50,7 +50,7 @@ APP_ICON = ASSETS_DIR / "hellocomp_icon.ico"
 WALLPAPER_FILE = ASSETS_DIR / "HelloCompwallpaper.png"
 
 GITHUB_RELEASES_URL = "https://github.com/GettyCZ/hellocomp-start/releases/latest"
-VERSION_MANIFEST_URL = "https://github.com/GettyCZ/hellocomp-start-updates/releases/latest/download/version.json"
+VERSION_MANIFEST_URL = "https://github.com/GettyCZ/hellocomp-start/releases/latest/download/version.json"
 
 LOGO_CANDIDATES = [
     ASSETS_DIR / "hellocomp_logo.svg",
