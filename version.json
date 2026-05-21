@@ -1,6 +1,6 @@
 {
-  "version": "2.1-beta2.6",
+  "version": "2.1-beta2.7",
   "windows_exe_url": "https://github.com/GettyCZ/hellocomp-start/releases/latest/download/HelloComp_Start.exe",
   "release_url": "https://github.com/GettyCZ/hellocomp-start/releases/latest",
-  "notes": "Fix ověření SSL certifikátu při kontrole aktualizací."
+  "notes": "Přidáno kopírování parametrů počítače a lepší doporučení GPU ovladače."
 }

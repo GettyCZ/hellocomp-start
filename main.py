@@ -38,7 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 
-APP_VERSION = "2.1-beta2.6"
+APP_VERSION = "2.1-beta2.7"
 
 APP_WIDTH = 1180
 APP_HEIGHT = 760
@@ -196,6 +196,9 @@ TRANSLATIONS = {
         "my_pc_text": "Přehled hlavních parametrů sestavy. Detailní hardwarové údaje se načtou automaticky ve Windows.",
         "my_pc_refresh": "Načíst znovu",
         "my_pc_loading": "Načítám…",
+        "my_pc_copy": "Zkopírovat parametry",
+        "my_pc_copy_done_title": "Parametry zkopírovány",
+        "my_pc_copy_done_text": "Parametry počítače byly zkopírovány do schránky.",
         "my_pc_windows_only": "Detailní informace se automaticky načtou ve Windows verzi aplikace.",
 
         "pc_fields": {
@@ -225,6 +228,7 @@ TRANSLATIONS = {
 
         "software_title": "Doporučené aplikace",
         "software_text": "Aplikace pro hraní, komunikaci, ovladače, správu počítače a základní test stability.",
+        "software_driver_recommendation": "Doporučený ovladač podle detekované grafické karty: {driver}",
         "software_tiles": [
             ("🎮 Steam", "Stáhnout a spustit instalátor"),
             ("💬 Discord", "Stáhnout a spustit instalátor"),
@@ -308,6 +312,9 @@ TRANSLATIONS = {
         "my_pc_text": "Prehľad hlavných parametrov zostavy. Detailné hardvérové údaje sa načítajú automaticky vo Windows.",
         "my_pc_refresh": "Načítať znova",
         "my_pc_loading": "Načítavam…",
+        "my_pc_copy": "Skopírovať parametre",
+        "my_pc_copy_done_title": "Parametre skopírované",
+        "my_pc_copy_done_text": "Parametre počítača boli skopírované do schránky.",
         "my_pc_windows_only": "Detailné informácie sa automaticky načítajú vo Windows verzii aplikácie.",
 
         "pc_fields": {
@@ -337,6 +344,7 @@ TRANSLATIONS = {
 
         "software_title": "Odporúčané aplikácie",
         "software_text": "Aplikácie na hranie, komunikáciu, ovládače, správu počítača a základný test stability.",
+        "software_driver_recommendation": "Odporúčaný ovládač podľa detegovanej grafickej karty: {driver}",
         "software_tiles": [
             ("🎮 Steam", "Stiahnuť a spustiť inštalátor"),
             ("💬 Discord", "Stiahnuť a spustiť inštalátor"),
@@ -383,6 +391,10 @@ TRANSLATIONS["hu"] = {
     "settings_update_button": "Alkalmazásfrissítés keresése",
     "menu": ["Saját gépem", "Első lépések", "Támogatás", "Alkalmazások", "Szerviz"],
     "my_pc_title": "Saját gépem",
+    "my_pc_copy": "Paraméterek másolása",
+    "my_pc_copy_done_title": "Paraméterek másolva",
+    "my_pc_copy_done_text": "A számítógép paraméterei a vágólapra kerültek.",
+    "software_driver_recommendation": "Ajánlott illesztőprogram az észlelt grafikus kártya alapján: {driver}",
     "support_title": "HelloComp támogatás",
     "software_title": "Ajánlott alkalmazások",
     "service_title": "Szerviz és reklamáció",
@@ -431,6 +443,9 @@ TRANSLATIONS["en"] = {
     "my_pc_text": "Overview of the main PC parameters. Detailed hardware information is loaded automatically on Windows.",
     "my_pc_refresh": "Reload",
     "my_pc_loading": "Loading…",
+    "my_pc_copy": "Copy specs",
+    "my_pc_copy_done_title": "Specs copied",
+    "my_pc_copy_done_text": "Computer specs have been copied to the clipboard.",
     "my_pc_windows_only": "Detailed information is loaded automatically in the Windows version of the app.",
     "pc_fields": {
         "manufacturer": "Manufacturer",
@@ -446,6 +461,7 @@ TRANSLATIONS["en"] = {
     "support_text": "Quick help, contact and answers to frequently asked questions.",
     "software_title": "Recommended apps",
     "software_text": "Apps for gaming, communication, drivers, PC management and basic stability testing.",
+    "software_driver_recommendation": "Recommended driver based on detected graphics card: {driver}",
     "service_title": "Service and warranty",
     "service_text": "Quick links for service, warranty claim or safe PC shipping.",
 }
@@ -464,6 +480,10 @@ TRANSLATIONS["ua"] = {
     "settings_update_button": "Перевірити оновлення програми",
     "menu": ["Мій ПК", "Перші кроки", "Підтримка", "Програми", "Сервіс"],
     "my_pc_title": "Мій ПК",
+    "my_pc_copy": "Скопіювати параметри",
+    "my_pc_copy_done_title": "Параметри скопійовано",
+    "my_pc_copy_done_text": "Параметри комп’ютера скопійовано до буфера обміну.",
+    "software_driver_recommendation": "Рекомендований драйвер за виявленою відеокартою: {driver}",
     "support_title": "Підтримка HelloComp",
     "software_title": "Рекомендовані програми",
     "service_title": "Сервіс",
@@ -1620,6 +1640,12 @@ class HelloCompStart(QWidget):
         top_layout.setContentsMargins(0, 0, 0, 0)
         top_layout.setSpacing(12)
 
+        self.copy_pc_button = QPushButton()
+        self.copy_pc_button.setObjectName("CopyPcButton")
+        self.copy_pc_button.setCursor(Qt.PointingHandCursor)
+        self.copy_pc_button.setFixedHeight(36)
+        self.copy_pc_button.clicked.connect(self.copy_hardware_info)
+
         self.refresh_pc_button = QPushButton()
         self.refresh_pc_button.setObjectName("RefreshPcButton")
         self.refresh_pc_button.setCursor(Qt.PointingHandCursor)
@@ -1627,6 +1653,7 @@ class HelloCompStart(QWidget):
         self.refresh_pc_button.clicked.connect(self.load_pc_information_with_feedback)
 
         top_layout.addStretch()
+        top_layout.addWidget(self.copy_pc_button)
         top_layout.addWidget(self.refresh_pc_button)
 
         grid_wrapper = QWidget()
@@ -1685,6 +1712,12 @@ class HelloCompStart(QWidget):
 
     def create_software_page(self):
         page = self.create_page_base("software")
+
+        self.gpu_recommendation_label = QLabel()
+        self.gpu_recommendation_label.setObjectName("GpuRecommendationLabel")
+        self.gpu_recommendation_label.setWordWrap(True)
+        self.gpu_recommendation_label.hide()
+        page.layout().addWidget(self.gpu_recommendation_label)
 
         tiles = self.create_tiles_grid("software", [
             (None, "steam", "steam", None),
@@ -2007,6 +2040,16 @@ class HelloCompStart(QWidget):
 
         tiles = self.tile_groups.get("software", [])
 
+        if hasattr(self, "gpu_recommendation_label"):
+            if recommended_tile:
+                driver_name = DRIVER_NAMES.get(recommended_tile, recommended_tile)
+                self.gpu_recommendation_label.setText(
+                    t.get("software_driver_recommendation", "Doporučený ovladač: {driver}").format(driver=driver_name)
+                )
+                self.gpu_recommendation_label.show()
+            else:
+                self.gpu_recommendation_label.hide()
+
         for tile in tiles:
             badge = None
             state = "normal"
@@ -2255,6 +2298,26 @@ exit /b 1
 
         QApplication.quit()
 
+    def copy_hardware_info(self):
+        t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
+        field_titles = t["pc_fields"]
+
+        ordered_keys = ["manufacturer", "cpu", "gpu", "ram", "drives", "baseboard"]
+        lines = []
+
+        for key in ordered_keys:
+            title = field_titles.get(key, key)
+            value = str(self.pc_info.get(key, "—") or "—").strip()
+            lines.append(f"{title}: {value}")
+
+        QApplication.clipboard().setText("\n".join(lines))
+
+        QMessageBox.information(
+            self,
+            t["my_pc_copy_done_title"],
+            t["my_pc_copy_done_text"]
+        )
+
     def load_pc_information_with_feedback(self):
         t = TRANSLATIONS.get(self.language, TRANSLATIONS["cz"])
         original_text = t["my_pc_refresh"]
@@ -2307,6 +2370,7 @@ exit /b 1
         self.footer_text.setText(t["footer"])
         self.footer_social_title.setText(t["footer_social_title"])
         self.refresh_pc_button.setText(t["my_pc_refresh"])
+        self.copy_pc_button.setText(t["my_pc_copy"])
 
         for index, text in enumerate(t["menu"]):
             self.menu_buttons[index].setText(text)
@@ -2500,6 +2564,16 @@ exit /b 1
                 color: rgba(255,255,255,0.34);
             }}
 
+            #GpuRecommendationLabel {{
+                background: rgba(0, 114, 198, 0.12);
+                border: 1px solid rgba(0, 114, 198, 0.26);
+                border-radius: 11px;
+                padding: 9px 13px;
+                color: rgba(255,255,255,0.86);
+                font-size: 13px;
+                font-weight: 400;
+            }}
+
             #PcInfoCard,
             #SettingsCard {{
                 background: rgba(255,255,255,0.052);
@@ -2526,6 +2600,7 @@ exit /b 1
             }}
 
             #RefreshPcButton,
+            #CopyPcButton,
             #SettingsActionButton {{
                 background: rgba(255,255,255,0.09);
                 border: 1px solid rgba(255,255,255,0.13);
@@ -2536,6 +2611,7 @@ exit /b 1
             }}
 
             #RefreshPcButton:hover,
+            #CopyPcButton:hover,
             #SettingsActionButton:hover {{
                 background: rgba(255,255,255,0.14);
                 border: 1px solid rgba(255,255,255,0.20);
